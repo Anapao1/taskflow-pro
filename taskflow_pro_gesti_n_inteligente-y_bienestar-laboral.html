@@ -1,0 +1,1768 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskFlow Pro - Gestión Inteligente, Bienestar y Reporte de Emergencias</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#4f46e5',
+                        secondary: '#06b6d4',
+                        darkBg: '#0f172a'
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'fade-in': 'fadeIn 0.4s ease-out',
+                        'spin-slow': 'spin 2s linear infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(-10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbars and sleek backdrops */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans antialiased min-h-screen flex flex-col selection:bg-cyan-500 selection:text-slate-950">
+
+    <header class="bg-slate-800/95 backdrop-blur-md border-b border-slate-700/80 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            
+            <!-- Logo -->
+            <div class="flex items-center space-x-3 cursor-pointer group" onclick="cambiarVista('landing')">
+                <div class="bg-gradient-to-tr from-indigo-600 to-cyan-400 p-2 rounded-xl text-white font-bold text-xl shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition transform">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+                <span class="text-xl font-extrabold tracking-wide text-white">TaskFlow <span class="text-cyan-400">Pro</span></span>
+            </div>
+            
+            <!-- Links de Navegación Principal -->
+            <nav class="hidden lg:flex space-x-6 text-sm font-medium">
+                <button type="button" onclick="cambiarVista('landing')" id="nav-landing" class="text-cyan-400 font-bold transition cursor-pointer">Inicio</button>
+                <button type="button" onclick="cambiarVista('planes')" id="nav-planes" class="text-slate-300 hover:text-cyan-400 transition cursor-pointer">Planes</button>
+                <button type="button" onclick="cambiarVista('dashboard')" id="nav-dashboard" class="text-slate-300 hover:text-cyan-400 transition cursor-pointer">Dashboard</button>
+                <button type="button" onclick="cambiarVista('tareas')" id="nav-tareas" class="text-slate-300 hover:text-cyan-400 transition cursor-pointer">Tareas</button>
+                <button type="button" onclick="cambiarVista('equipo')" id="nav-equipo" class="text-slate-300 hover:text-cyan-400 transition cursor-pointer">Carga & Salud</button>
+            </nav>
+
+            <!-- Acciones Rápidas y Herramientas -->
+            <div class="flex items-center space-x-2 sm:space-x-3">
+                
+                <button type="button" onclick="abrirModalEmergencia('emergencia')" class="bg-rose-600/90 hover:bg-rose-500 text-white px-3 py-2 rounded-xl text-xs font-black shadow-lg shadow-rose-600/30 transition cursor-pointer flex items-center space-x-1.5 animate-pulse-slow border border-rose-400/30" title="Reportar Novedad Urgente">
+                    <i class="fa-solid fa-triangle-exclamation text-sm"></i>
+                    <span class="hidden sm:inline">Novedad Urgente</span>
+                </button>
+
+                <button type="button" onclick="abrirModalPomodoro()" class="bg-indigo-600/25 hover:bg-indigo-600/40 border border-indigo-500/50 text-indigo-300 px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center space-x-1.5" title="Temporizador Pomodoro">
+                    <i class="fa-solid fa-clock"></i>
+                    <span class="hidden md:inline">Pomodoro</span>
+                </button>
+
+                <button type="button" onclick="abrirBuzonCorreos()" class="bg-slate-700/80 hover:bg-slate-600 border border-slate-600 text-slate-200 px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center space-x-1.5 relative" title="Bandeja de Correos">
+                    <i class="fa-solid fa-envelope text-cyan-400"></i>
+                    <span id="badge-correos" class="bg-rose-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">1</span>
+                </button>
+
+                <!-- Panel de Notificaciones -->
+                <div class="relative">
+                    <button type="button" id="btn-toggle-notis" onclick="togglePanelNotificaciones()" class="bg-slate-700/80 hover:bg-slate-600 w-10 h-10 rounded-xl text-slate-200 transition cursor-pointer relative flex items-center justify-center border border-slate-600" title="Notificaciones">
+                        <i class="fa-solid fa-bell text-sm"></i>
+                        <span id="badge-notis" class="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-slate-800">2</span>
+                    </button>
+                    <div id="panel-notificaciones" class="absolute right-0 mt-2 w-80 bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl hidden z-50 overflow-hidden backdrop-blur-xl">
+                        <div class="p-3 bg-slate-900 border-b border-slate-700 flex justify-between items-center">
+                            <span class="text-xs font-bold text-white uppercase tracking-wider">Notificaciones</span>
+                            <button type="button" onclick="marcarLeidas()" class="text-[10px] text-cyan-400 hover:underline cursor-pointer font-semibold">Marcar leídas</button>
+                        </div>
+                        <div id="lista-notificaciones" class="max-h-64 overflow-y-auto divide-y divide-slate-700/50 text-xs">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" onclick="verificarPerfil()" class="bg-slate-700/80 hover:bg-slate-600 border border-slate-600 px-3 py-2 rounded-xl text-sm transition cursor-pointer flex items-center space-x-2">
+                    <i class="fa-solid fa-circle-user text-lg text-cyan-400"></i>
+                    <span id="label-usuario-activo" class="text-xs font-semibold text-slate-300 hidden xl:inline">Invitado (Ingresar)</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="lg:hidden flex justify-around bg-slate-800 border-t border-slate-700/60 py-2 px-1 text-xs">
+            <button onclick="cambiarVista('landing')" class="text-slate-300 hover:text-cyan-400 p-1 flex flex-col items-center"><i class="fa-solid fa-house mb-0.5"></i>Inicio</button>
+            <button onclick="cambiarVista('planes')" class="text-slate-300 hover:text-cyan-400 p-1 flex flex-col items-center"><i class="fa-solid fa-tags mb-0.5"></i>Planes</button>
+            <button onclick="cambiarVista('dashboard')" class="text-slate-300 hover:text-cyan-400 p-1 flex flex-col items-center"><i class="fa-solid fa-chart-pie mb-0.5"></i>Dashboard</button>
+            <button onclick="cambiarVista('tareas')" class="text-slate-300 hover:text-cyan-400 p-1 flex flex-col items-center"><i class="fa-solid fa-list-check mb-0.5"></i>Tareas</button>
+            <button onclick="cambiarVista('equipo')" class="text-slate-300 hover:text-cyan-400 p-1 flex flex-col items-center"><i class="fa-solid fa-heart-pulse mb-0.5"></i>Salud</button>
+        </div>
+    </header>
+
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-2 pointer-events-none max-w-sm"></div>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- VISTA 1: LANDING -->
+        <section id="vista-landing" class="vista space-y-16 py-8">
+            <div class="text-center max-w-3xl mx-auto space-y-5">
+                <span class="inline-flex items-center gap-1.5 bg-indigo-500/10 text-indigo-400 text-xs font-semibold px-3 py-1.5 rounded-full border border-indigo-500/20">
+                    <i class="fa-solid fa-shield-halved text-cyan-400"></i> Sistema Integrado de Alertas y Salud Laboral
+                </span>
+                <h1 class="text-4xl sm:text-6xl font-black tracking-tight text-white leading-tight">Gestiona proyectos y emite reportes en tiempo real</h1>
+                <p class="text-slate-400 text-base sm:text-lg leading-relaxed">Organiza tareas, prioriza actividades, monitorea el nivel de agotamiento de tu equipo y envía reportes de novedades e incidencias por correo electrónico directo.</p>
+                <div class="flex flex-wrap justify-center gap-4 pt-4">
+                    <button type="button" onclick="cambiarVista('dashboard')" class="bg-primary hover:bg-indigo-600 text-white font-bold px-6 py-3.5 rounded-xl transition shadow-lg shadow-indigo-500/30 cursor-pointer flex items-center">
+                        Explorar Dashboard <i class="fa-solid fa-arrow-right ml-2 text-sm"></i>
+                    </button>
+                    <button type="button" onclick="abrirModalEmergencia('emergencia')" class="bg-rose-600 hover:bg-rose-500 text-white font-bold px-6 py-3.5 rounded-xl shadow-lg shadow-rose-600/30 transition cursor-pointer flex items-center">
+                        <i class="fa-solid fa-paper-plane mr-2"></i> Reportar Novedad Urgente
+                    </button>
+                </div>
+            </div>
+
+            <div class="space-y-8">
+                <div class="text-center max-w-xl mx-auto space-y-2">
+                    <h2 class="text-3xl font-extrabold text-white">Capacidades del Sistema</h2>
+                    <p class="text-slate-400 text-sm">Diseñado para maximizar la efectividad en la gestión de proyectos y la comunicación ejecutiva.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-slate-800/80 border border-slate-700/80 p-6 rounded-2xl space-y-4 shadow-xl hover:border-cyan-500/50 transition transform hover:-translate-y-1">
+                        <div class="w-12 h-12 bg-cyan-500/10 text-cyan-400 rounded-xl flex items-center justify-center text-xl font-bold">
+                            <i class="fa-solid fa-shield-heart"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white">Escudo Anti-Burnout</h3>
+                        <p class="text-sm text-slate-400">Supervisa de forma continua la saturación de los colaboradores y posibilita el balance instantáneo de la carga de trabajo.</p>
+                    </div>
+                    <div class="bg-slate-800/80 border border-slate-700/80 p-6 rounded-2xl space-y-4 shadow-xl hover:border-primary/50 transition transform hover:-translate-y-1">
+                        <div class="w-12 h-12 bg-primary/10 text-indigo-400 rounded-xl flex items-center justify-center text-xl font-bold">
+                            <i class="fa-solid fa-envelope-circle-check"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white">Envío Real de Correos</h3>
+                        <p class="text-sm text-slate-400">Emisión directa de novedades urgentes e informes gerenciales vía correo electrónico real mediante canal seguro API o Mailto.</p>
+                    </div>
+                    <div class="bg-slate-800/80 border border-slate-700/80 p-6 rounded-2xl space-y-4 shadow-xl hover:border-emerald-500/50 transition transform hover:-translate-y-1">
+                        <div class="w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-xl flex items-center justify-center text-xl font-bold">
+                            <i class="fa-solid fa-file-export"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white">Exportación en TXT</h3>
+                        <p class="text-sm text-slate-400">Descarga instantánea de informes formateados en TXT para auditorías, actas de la empresa e historial operativo.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VISTA 2: PLANES Y SUSCRIPCIONES -->
+        <section id="vista-planes" class="vista hidden space-y-8 py-6">
+            <div class="text-center max-w-xl mx-auto space-y-4">
+                <span class="bg-cyan-500/10 text-cyan-400 text-xs font-semibold px-3 py-1 rounded-full border border-cyan-500/20">Planes Flexibles</span>
+                <h2 class="text-3xl font-bold text-white">Selecciona tu Plan de Trabajo</h2>
+                <p class="text-slate-400 text-sm">Accede a las características avanzadas de monitoreo, alertas urgentes y emisión de informes.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-8 flex flex-col justify-between hover:border-slate-600 transition">
+                    <div>
+                        <span class="text-cyan-400 text-sm font-bold uppercase tracking-wider">Uso Profesional</span>
+                        <h3 class="text-2xl font-bold text-white mt-1">Plan Personal</h3>
+                        <p class="text-slate-400 text-sm mt-2">Para profesionales independientes y líderes de equipo tácticos.</p>
+                        <div class="my-6">
+                            <span class="text-4xl font-black text-white">$10.000</span> <span class="text-slate-400 text-sm">/ mes</span>
+                        </div>
+                        <ul class="space-y-3 text-sm text-slate-300">
+                            <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i> Gestión ilimitada de tareas</li>
+                            <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i> Reportes de novedad básicos</li>
+                            <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i> Temporizador Pomodoro</li>
+                        </ul>
+                    </div>
+                    <div class="mt-8">
+                        <button type="button" onclick="mostrarCheckoutEnPlanes('Plan Personal', '$10.000')" class="w-full bg-slate-700 hover:bg-cyan-500 hover:text-slate-950 font-bold py-3 rounded-xl transition cursor-pointer shadow-md">
+                            Adquirir Plan Personal
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-b from-indigo-950/80 to-slate-800 border-2 border-primary rounded-2xl p-8 flex flex-col justify-between relative shadow-xl shadow-indigo-500/10">
+                    <div class="absolute -top-3 right-6 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full uppercase shadow">Recomendado</div>
+                    <div>
+                        <span class="text-indigo-400 text-sm font-bold uppercase tracking-wider">Empresas & Equipos</span>
+                        <h3 class="text-2xl font-bold text-white mt-1">Plan Corporativo</h3>
+                        <p class="text-slate-400 text-sm mt-2">Seguridad operativa total, salud laboral y canal de correos reales.</p>
+                        <div class="my-6">
+                            <span class="text-4xl font-black text-white">$50.000</span> <span class="text-slate-400 text-sm">/ mes</span>
+                        </div>
+                        <ul class="space-y-3 text-sm text-slate-300">
+                            <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i> Todo lo del Plan Personal</li>
+                            <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i> Envío real de Novedades de Emergencia</li>
+                            <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i> Exportación en TXT</li>
+                            <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i> Balanceo automático de equipo</li>
+                        </ul>
+                    </div>
+                    <div class="mt-8">
+                        <button type="button" onclick="mostrarCheckoutEnPlanes('Plan Corporativo', '$50.000')" class="w-full bg-primary hover:bg-indigo-600 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-indigo-500/30 cursor-pointer">
+                            Adquirir Plan Corporativo
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN DE PAGO DIRECTO -->
+            <div id="seccion-pago-planes" class="max-w-4xl mx-auto bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl hidden overflow-hidden mt-8 transition-all duration-500 animate-fade-in">
+                <div class="p-5 bg-slate-900 border-b border-slate-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h3 class="text-lg font-black text-white flex items-center gap-2"><i class="fa-solid fa-shield-halved text-emerald-400"></i> Portal de Pago Seguro</h3>
+                        <p class="text-slate-400 text-sm mt-1">Has seleccionado el <strong id="checkout-plan-nombre" class="text-cyan-400">Plan</strong> por <strong id="checkout-plan-precio" class="text-white"></strong>.</p>
+                    </div>
+                    <button type="button" onclick="cancelarCompraPlanes()" class="text-xs bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-xl transition cursor-pointer border border-slate-600"><i class="fa-solid fa-arrow-left mr-1"></i> Cambiar Plan</button>
+                </div>
+                
+                <div class="p-6 grid grid-cols-1 lg:grid-cols-5 gap-8">
+                    <!-- Selector de Métodos -->
+                    <div class="lg:col-span-2 space-y-4">
+                        <h4 class="text-sm font-bold text-slate-300">Seleccionar Método de Pago</h4>
+                        <div class="space-y-3">
+                            <label class="flex items-center gap-3 p-4 bg-slate-900 border border-slate-600 rounded-xl cursor-pointer hover:border-cyan-500/50 transition relative overflow-hidden group">
+                                <input type="radio" name="metodo_pago" value="tarjeta" checked onchange="cambiarMetodoPagoPlanes('tarjeta')" class="w-4 h-4 text-cyan-500 bg-slate-800 border-slate-600 focus:ring-cyan-500 focus:ring-2 relative z-10 cursor-pointer">
+                                <div class="flex-1 flex justify-between items-center relative z-10">
+                                    <span class="text-sm font-bold text-white">Tarjeta de Crédito</span>
+                                    <div class="flex gap-1 text-slate-400 text-xl"><i class="fa-brands fa-cc-visa"></i><i class="fa-brands fa-cc-mastercard"></i></div>
+                                </div>
+                            </label>
+                            <label class="flex items-center gap-3 p-4 bg-slate-900 border border-slate-700 rounded-xl cursor-pointer hover:border-cyan-500/50 transition relative overflow-hidden group">
+                                <input type="radio" name="metodo_pago" value="banco" onchange="cambiarMetodoPagoPlanes('banco')" class="w-4 h-4 text-cyan-500 bg-slate-800 border-slate-600 focus:ring-cyan-500 focus:ring-2 relative z-10 cursor-pointer">
+                                <div class="flex-1 flex justify-between items-center relative z-10">
+                                    <span class="text-sm font-bold text-white">PSE / Banco</span>
+                                    <i class="fa-solid fa-building-columns text-slate-400 text-xl"></i>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Formularios -->
+                    <div class="lg:col-span-3 bg-slate-900/50 p-6 rounded-2xl border border-slate-700/50 shadow-inner">
+                        <div id="form-tarjeta-planes" class="space-y-4 animate-fade-in">
+                            <div class="space-y-1">
+                                <label class="text-xs font-semibold text-slate-400">Número de Tarjeta</label>
+                                <div class="relative">
+                                    <i class="fa-brands fa-cc-visa absolute left-3 top-2.5 text-slate-500 text-lg"></i>
+                                    <input type="text" placeholder="0000 0000 0000 0000" class="w-full bg-slate-800 border border-slate-600 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white outline-none focus:border-cyan-400 tracking-widest">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="space-y-1">
+                                    <label class="text-xs font-semibold text-slate-400">Vencimiento</label>
+                                    <input type="text" placeholder="MM/YY" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-cyan-400 text-center">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-xs font-semibold text-slate-400">CVC</label>
+                                    <input type="password" placeholder="•••" maxlength="4" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-cyan-400 text-center">
+                                </div>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-xs font-semibold text-slate-400">Nombre del Titular</label>
+                                <input type="text" placeholder="Como aparece en la tarjeta" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-cyan-400">
+                            </div>
+                        </div>
+
+                        <div id="form-banco-planes" class="space-y-4 hidden animate-fade-in">
+                            <div class="bg-indigo-900/40 border border-indigo-500/50 p-4 rounded-xl flex items-start gap-3 mb-2">
+                                <i class="fa-solid fa-circle-check text-indigo-400 text-xl mt-0.5"></i>
+                                <div>
+                                    <h5 class="text-sm font-bold text-white">Conexión Segura PSE</h5>
+                                    <p class="text-xs text-indigo-200 mt-1">Serás redirigido a la sucursal virtual de tu banco.</p>
+                                </div>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-xs font-semibold text-slate-400">Entidad Bancaria</label>
+                                <select class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-cyan-400 cursor-pointer">
+                                    <option value="" disabled selected>Seleccione un banco...</option>
+                                    <option>Bancolombia</option>
+                                    <option>Banco de Bogotá</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 pt-5 border-t border-slate-700">
+                            <button type="button" id="btn-procesar-pago-planes" onclick="procesarPagoPlanes()" class="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-sm transition cursor-pointer shadow-lg shadow-emerald-500/20 flex justify-center items-center gap-2">
+                                <i id="icono-pago-planes" class="fa-solid fa-lock"></i> <span id="texto-pago-planes">Procesar Pago Ahora</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VISTA 3: DASHBOARD -->
+        <section id="vista-dashboard" class="vista hidden space-y-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-800/50 p-5 rounded-2xl border border-slate-700/60">
+                <div>
+                    <h2 class="text-2xl font-black text-white">Dashboard Operativo</h2>
+                    <p class="text-slate-400 text-sm">Visión general del estado de las tareas, colaboradores y alertas activas.</p>
+                </div>
+                <div class="flex flex-wrap gap-2.5">
+                    <button type="button" onclick="abrirModalEmergencia('novedad')" class="bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center shadow-lg cursor-pointer">
+                        <i class="fa-solid fa-triangle-exclamation mr-1.5"></i> Reportar Novedad
+                    </button>
+                    <button type="button" onclick="abrirModalExportar()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition flex items-center shadow-md cursor-pointer border border-slate-600">
+                        <i class="fa-solid fa-download mr-1.5"></i> Exportar
+                    </button>
+                    <button type="button" onclick="abrirModalTarea()" class="bg-primary hover:bg-indigo-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center shadow-lg shadow-indigo-500/20 cursor-pointer">
+                        <i class="fa-solid fa-plus mr-1.5"></i> Nueva Tarea
+                    </button>
+                </div>
+            </div>
+
+            <!-- PANEL DE ENFOQUE ACTIVO (BIORRITMO) -->
+            <div id="panel-enfoque-activo" class="hidden bg-gradient-to-r from-cyan-600 to-indigo-600 p-5 rounded-2xl text-slate-950 font-bold flex flex-col sm:flex-row justify-between items-center gap-4 shadow-xl transition-all duration-500">
+                <div class="flex items-center space-x-3">
+                    <i class="fa-solid fa-brain text-2xl text-white animate-pulse"></i>
+                    <div>
+                        <h4 class="text-white text-base font-extrabold">Modo Enfoque Óptimo Activado</h4>
+                        <p id="biorritmo-detalle-activo" class="text-xs text-slate-100 font-medium">Filtrando tareas de máxima prioridad adaptadas a tu bio-ritmo.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="cerrarModoEnfoque()" class="bg-slate-950 text-white px-4 py-2 rounded-xl text-xs hover:bg-slate-800 transition cursor-pointer shadow-md whitespace-nowrap">Desactivar Modo</button>
+            </div>
+
+            <!-- METRICAS RESUMEN -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700/60 shadow-md">
+                    <span class="text-slate-400 text-xs font-bold uppercase tracking-wider">Total Tareas</span>
+                    <div class="text-3xl font-black text-white mt-2 flex items-baseline justify-between">
+                        <span id="stat-total">4</span>
+                        <span class="text-xs text-cyan-400 font-semibold bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">Registradas</span>
+                    </div>
+                </div>
+                <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700/60 shadow-md">
+                    <span class="text-slate-400 text-xs font-bold uppercase tracking-wider">Pendientes / En Curso</span>
+                    <div class="text-3xl font-black text-amber-400 mt-2 flex items-baseline justify-between">
+                        <span id="stat-pendientes">3</span>
+                        <span class="text-xs text-amber-400 font-semibold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">Activas</span>
+                    </div>
+                </div>
+                <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700/60 shadow-md">
+                    <span class="text-slate-400 text-xs font-bold uppercase tracking-wider">Progreso Global</span>
+                    <div class="text-3xl font-black text-emerald-400 mt-2 flex items-baseline justify-between">
+                        <span id="stat-progreso">25%</span>
+                        <span class="text-xs text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Cumplimiento</span>
+                    </div>
+                </div>
+                <div id="tarjeta-alerta-estres" class="bg-slate-800 p-5 rounded-2xl border border-slate-700/60 shadow-md transition-colors duration-300">
+                    <span class="text-slate-400 text-xs font-bold uppercase tracking-wider" id="titulo-alerta-estres">Estado del Equipo</span>
+                    <div class="text-lg font-bold mt-2 flex items-center justify-between" id="contenido-alerta-estres">
+                        <span id="stat-alertas" class="text-emerald-400">Saludable</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- COLUMNA IZQUIERDA: TABLA Y BIORRITMO -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700/60 space-y-4 shadow-xl">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-bold text-lg text-white flex items-center gap-2">
+                                <i class="fa-solid fa-list-check text-cyan-400 text-sm"></i> Tareas Prioritarias
+                            </h3>
+                            <button type="button" onclick="cambiarVista('tareas')" class="text-xs text-cyan-400 font-bold hover:underline cursor-pointer">Ver directorio completo &rarr;</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead>
+                                    <tr class="border-b border-slate-700 text-slate-400 text-xs uppercase tracking-wider">
+                                        <th class="py-3 px-2">Tarea & Descripción</th>
+                                        <th class="py-3 px-2">Responsable</th>
+                                        <th class="py-3 px-2">Prioridad</th>
+                                        <th class="py-3 px-2 text-right">Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-dashboard-tareas" class="divide-y divide-slate-700/50"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="widget-biorritmo" class="bg-gradient-to-r from-slate-800 via-slate-800 to-indigo-950/60 p-6 rounded-2xl border border-indigo-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
+                        <div class="space-y-1">
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-brain text-cyan-400 text-lg"></i>
+                                <h4 class="font-bold text-white">Sincronizador de Bio-Ritmo</h4>
+                            </div>
+                            <p class="text-xs text-slate-300">Evalúa tu pico de productividad diaria y reordena automáticamente tus tareas.</p>
+                        </div>
+                        <button type="button" onclick="ejecutarBioRitmo()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs px-4 py-2.5 rounded-xl whitespace-nowrap transition cursor-pointer shadow-lg shadow-cyan-500/20 flex items-center gap-2">
+                            <i class="fa-solid fa-bolt"></i> Activar Enfoque
+                        </button>
+                    </div>
+                </div>
+
+                <!-- COLUMNA DERECHA: ALERTAS -->
+                <div class="space-y-6">
+                    <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700/60 space-y-4 shadow-xl">
+                        <div class="flex items-center justify-between border-b border-slate-700/60 pb-3">
+                            <h3 class="font-bold text-base text-white">Salud del Personal</h3>
+                            <i class="fa-solid fa-shield-heart text-cyan-400 text-lg"></i>
+                        </div>
+                        
+                        <!-- Panel Dinámico de Alertas de Salud -->
+                        <div id="contenedor-alertas-dashboard" class="space-y-3 max-h-[350px] overflow-y-auto pr-2">
+                            <!-- Aquí se inyectan las alertas dinámicamente con JS -->
+                        </div>
+
+                        <div class="pt-2 space-y-2.5">
+                            <button type="button" onclick="abrirModalEmergencia('emergencia')" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-2.5 rounded-xl text-xs transition cursor-pointer flex items-center justify-center space-x-2 shadow-lg shadow-rose-600/20 border border-rose-400/30">
+                                <i class="fa-solid fa-paper-plane"></i>
+                                <span>Emitir Reporte de Emergencia</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VISTA 4: TAREAS COMPLETAS -->
+        <section id="vista-tareas" class="vista hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-800/50 p-4 rounded-2xl border border-slate-700/60">
+                <div>
+                    <h2 class="text-2xl font-black text-white">Directorio General de Tareas</h2>
+                    <p class="text-slate-400 text-sm">Gestiona, filtra y actualiza el estado de las asignaciones del equipo.</p>
+                </div>
+                <button type="button" onclick="abrirModalTarea()" class="bg-primary hover:bg-indigo-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center shadow-lg shadow-indigo-500/20 cursor-pointer">
+                    <i class="fa-solid fa-plus mr-1.5"></i> Nueva Tarea
+                </button>
+            </div>
+            
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700/60 space-y-4 shadow-xl">
+                <div class="flex flex-col sm:flex-row gap-3 justify-between items-center">
+                    <div class="relative w-full sm:w-80">
+                        <i class="fa-solid fa-search absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+                        <input type="text" id="input-buscar-tarea" oninput="filtrarTareas()" placeholder="Buscar por título o colaborador..." class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 transition">
+                    </div>
+                    <div class="flex w-full sm:w-auto gap-2">
+                        <select id="filtro-prioridad" onchange="filtrarTareas()" class="w-full sm:w-auto bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl px-3 py-2 outline-none focus:border-cyan-400 cursor-pointer">
+                            <option value="todas">Todas las Prioridades</option>
+                            <option value="Alta">Prioridad Alta</option>
+                            <option value="Media">Prioridad Media</option>
+                            <option value="Baja">Prioridad Baja</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="border-b border-slate-700 text-slate-400 text-xs uppercase tracking-wider">
+                                <th class="py-3 px-3">Tarea & Descripción</th>
+                                <th class="py-3 px-3">Responsable</th>
+                                <th class="py-3 px-3">Detalles (Tipo/Prioridad)</th>
+                                <th class="py-3 px-3">Fecha Límite</th>
+                                <th class="py-3 px-3">Estado</th>
+                                <th class="py-3 px-3 text-right">Opciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-gestion-tareas" class="divide-y divide-slate-700/50"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- VISTA 5: CARGA LABORAL & SALUD -->
+        <section id="vista-equipo" class="vista hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-800/50 p-4 rounded-2xl border border-slate-700/60">
+                <div>
+                    <h2 class="text-2xl font-black text-white">Escudo de Salud Laboral</h2>
+                    <p class="text-slate-400 text-sm">Nivel de estrés, saturación de trabajo y rebalanceo inteligente de tareas.</p>
+                </div>
+                <button type="button" onclick="abrirModalColaborador()" class="bg-secondary hover:bg-cyan-500 text-slate-950 text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center shadow-lg shadow-cyan-500/20 cursor-pointer">
+                    <i class="fa-solid fa-user-plus mr-1.5"></i> Añadir Colaborador
+                </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="contenedor-usuarios-salud"></div>
+        </section>
+    </main>
+
+    <footer class="bg-slate-950 border-t border-slate-800/80 py-6 text-center text-xs text-slate-500 mt-auto">
+        <p>&copy; 2026 TaskFlow Pro. Plataforma Integral de Gestión, Bienestar Laboral y Comunicación de Novedades.</p>
+    </footer>
+
+    <!-- MODAL AUTH (LOGIN/REGISTRO) -->
+    <div id="modal-auth" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-slate-800 border border-slate-700 w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden transform transition-all duration-300">
+            <div class="p-4 bg-slate-900 border-b border-slate-700 flex justify-between items-center">
+                <h3 id="auth-title" class="font-bold text-white text-base"><i class="fa-solid fa-right-to-bracket text-cyan-400 mr-1"></i> Iniciar Sesión</h3>
+                <button type="button" onclick="cerrarModal('modal-auth')" class="text-slate-400 hover:text-white cursor-pointer transition"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <!-- Formulario de Autenticación -->
+            <div id="auth-form-container" class="p-6 space-y-4">
+                <form id="auth-form" onsubmit="procesarAuth(event)" class="space-y-4">
+                    <div id="auth-name-group" class="space-y-1 hidden">
+                        <label class="text-xs font-semibold text-slate-300">Nombre Completo</label>
+                        <input type="text" id="auth-name" placeholder="Ej. Juan Pérez" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-cyan-400 transition">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold text-slate-300">Correo Electrónico</label>
+                        <input type="email" id="auth-email" placeholder="usuario@empresa.com" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-cyan-400 transition">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold text-slate-300">Contraseña</label>
+                        <input type="password" id="auth-password" placeholder="••••••••" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-cyan-400 transition">
+                    </div>
+                    <div class="pt-2">
+                        <button type="submit" id="auth-submit-btn" class="w-full py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-black tracking-wide transition cursor-pointer shadow-lg shadow-cyan-500/20">
+                            Ingresar
+                        </button>
+                    </div>
+                </form>
+                <div class="text-center pt-3 border-t border-slate-700/80">
+                    <button type="button" onclick="toggleAuthMode()" id="auth-toggle-btn" class="text-xs text-slate-400 hover:text-cyan-400 font-medium transition cursor-pointer">
+                        ¿No tienes cuenta? Crea una aquí.
+                    </button>
+                </div>
+            </div>
+
+            <!-- Panel de Perfil (Cuando ya está logueado) -->
+            <div id="auth-profile-container" class="p-6 space-y-4 hidden text-center">
+                <div class="w-20 h-20 bg-slate-900 rounded-full mx-auto flex items-center justify-center border-4 border-cyan-500/30 shadow-lg shadow-cyan-500/10 mb-2">
+                    <i class="fa-solid fa-user text-3xl text-cyan-400"></i>
+                </div>
+                <div>
+                    <h4 id="profile-name" class="text-lg font-black text-white">Usuario</h4>
+                    <p id="profile-email" class="text-xs text-slate-400">correo@ejemplo.com</p>
+                </div>
+                <div class="pt-4 border-t border-slate-700/80">
+                    <button type="button" onclick="cerrarSesion()" class="w-full py-2.5 rounded-xl bg-rose-600/10 hover:bg-rose-600 text-rose-500 hover:text-white border border-rose-500/30 text-xs font-bold transition cursor-pointer shadow-md">
+                        <i class="fa-solid fa-arrow-right-from-bracket mr-1"></i> Cerrar Sesión
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL EMERGENCIAS -->
+    <div id="modal-emergencia" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-50 p-4">
+        <div class="bg-[#1e2532] border border-slate-700 w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[95vh] overflow-hidden transform transition-all">
+            <div id="header-modal-emergencia" class="p-4 md:p-5 bg-gradient-to-r from-rose-900/40 to-[#1e2532] border-b border-rose-500/20 flex justify-between items-center shrink-0">
+                <div class="flex items-center space-x-3 text-white">
+                    <i id="icono-modal-emergencia" class="fa-solid fa-triangle-exclamation text-xl md:text-2xl text-rose-400"></i>
+                    <h3 id="titulo-modal-emergencia" class="font-extrabold text-lg md:text-xl tracking-wide">Emitir Reporte de Novedad</h3>
+                </div>
+                <button type="button" onclick="cerrarModal('modal-emergencia')" class="text-slate-400 hover:text-white cursor-pointer transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <div class="p-5 md:p-6 space-y-4 md:space-y-5 overflow-y-auto flex-1">
+                <p id="desc-modal-emergencia" class="text-xs md:text-sm text-slate-300 leading-relaxed">
+                    Este formulario emite una <strong class="text-rose-400">Novedad de Emergencia Oficial</strong>. Puedes descargar el acta en TXT, previsualizarla o enviarla por <strong class="text-cyan-400">correo electrónico real</strong>.
+                </p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+                    <div class="space-y-1.5">
+                        <label class="text-xs md:text-sm font-bold text-slate-200">Nivel de Incidencia</label>
+                        <select id="emergencia-nivel" class="w-full bg-[#0f1523] border border-slate-700 rounded-xl px-3 md:px-4 py-2 md:py-2.5 text-xs md:text-sm text-white outline-none focus:border-rose-400 cursor-pointer shadow-inner">
+                            <option value="CRÍTICA - Detención Operativa">🚨 CRÍTICA - Detención Operativa</option>
+                            <option value="ALTA - Sobrecarga de Personal">⚠️ ALTA - Sobrecarga de Personal</option>
+                            <option value="MODERADA - Bloqueo Técnico">⚡ MODERADA - Bloqueo Técnico</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-xs md:text-sm font-bold text-slate-200">Área / Proyecto Afectado</label>
+                        <input type="text" id="emergencia-area" value="Infraestructura & Operaciones" class="w-full bg-[#0f1523] border border-slate-700 rounded-xl px-3 md:px-4 py-2 md:py-2.5 text-xs md:text-sm text-white outline-none focus:border-rose-400 shadow-inner">
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-xs md:text-sm font-bold text-slate-200">Correo Electrónico Destinatario</label>
+                    <input type="email" id="emergencia-email" value="gerencia@empresa.com" class="w-full bg-[#0f1523] border border-slate-700 rounded-xl px-3 md:px-4 py-2 md:py-2.5 text-xs md:text-sm text-white outline-none focus:border-cyan-400 shadow-inner">
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-xs md:text-sm font-bold text-slate-200">Detalle de la Novedad / Causa Raíz</label>
+                    <textarea id="emergencia-descripcion" rows="3" placeholder="Describa el motivo de la emergencia y el impacto..." class="w-full bg-[#0f1523] border border-slate-700 rounded-xl px-3 md:px-4 py-2 md:py-2.5 text-xs md:text-sm text-white outline-none focus:border-cyan-400 shadow-inner resize-none"></textarea>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-xs md:text-sm font-bold text-slate-200">Acción Inmediata Requerida</label>
+                    <input type="text" id="emergencia-accion" value="Aprobación inmediata de reasignación de personal." class="w-full bg-[#0f1523] border border-slate-700 rounded-xl px-3 md:px-4 py-2 md:py-2.5 text-xs md:text-sm text-white outline-none focus:border-cyan-400 shadow-inner">
+                </div>
+            </div>
+
+            <div class="p-4 md:p-5 border-t border-slate-700/80 bg-slate-900/60 shrink-0 flex flex-col gap-3">
+                <div class="flex flex-col sm:flex-row gap-3 w-full">
+                    <button type="button" onclick="previsualizarActaTXT()" class="flex-1 bg-[#334155] hover:bg-[#475569] text-white text-xs md:text-sm font-bold px-4 py-2.5 rounded-xl transition cursor-pointer flex items-center justify-center gap-2 border border-slate-600">
+                        <i class="fa-solid fa-eye text-cyan-400"></i> Previsualizar
+                    </button>
+                    <button type="button" onclick="descargarActaTXT()" class="flex-1 bg-[#334155] hover:bg-[#475569] text-white text-xs md:text-sm font-bold px-4 py-2.5 rounded-xl transition cursor-pointer flex items-center justify-center gap-2 border border-slate-600">
+                        <i class="fa-solid fa-file-lines text-emerald-400"></i> Descargar TXT
+                    </button>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-3 w-full">
+                    <button type="button" id="btn-enviar-correo-real" onclick="enviarEmergenciaAPI()" class="w-full bg-[#e11d48] hover:bg-rose-600 text-white text-xs md:text-sm font-bold px-4 py-2.5 rounded-xl transition cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-rose-600/30">
+                        <i class="fa-solid fa-paper-plane"></i> Enviar Correo Real
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CREAR Y EDITAR TAREA -->
+    <div id="modal-tarea" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-slate-800 border border-slate-700 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden">
+            <div class="p-4 bg-slate-900 border-b border-slate-700 flex justify-between items-center">
+                <h3 id="modal-tarea-titulo" class="font-bold text-white text-base">Crear Nueva Tarea</h3>
+                <button type="button" onclick="cerrarModal('modal-tarea')" class="text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <input type="hidden" id="task-edit-id">
+                
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-slate-300">Título</label>
+                    <input type="text" id="task-titulo" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-cyan-400">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-slate-300">Descripción</label>
+                    <textarea id="task-desc" rows="2" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-cyan-400"></textarea>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold text-slate-300">Responsable (Usuario)</label>
+                        <select id="task-responsable" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white cursor-pointer outline-none focus:border-cyan-400">
+                        </select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold text-slate-300">Prioridad</label>
+                        <select id="task-prioridad" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white cursor-pointer outline-none focus:border-cyan-400">
+                            <option value="Alta">Alta</option>
+                            <option value="Media">Media</option>
+                            <option value="Baja">Baja</option>
+                        </select>
+                    </div>
+                    
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold text-slate-300">Tipo de Tarea</label>
+                        <select id="task-tipo" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white cursor-pointer outline-none focus:border-cyan-400">
+                            <option value="Operativa">Operativa</option>
+                            <option value="Administrativa">Administrativa</option>
+                            <option value="Desarrollo">Desarrollo</option>
+                            <option value="Soporte">Soporte</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold text-slate-300">Fecha Límite</label>
+                        <input type="date" id="task-fecha" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white cursor-pointer outline-none focus:border-cyan-400">
+                    </div>
+                    <!-- NUEVO CAMPO: ESTADO DE LA TAREA -->
+                    <div class="space-y-1 col-span-2">
+                        <label class="text-xs font-semibold text-slate-300">Estado de la Tarea</label>
+                        <select id="task-estado" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white cursor-pointer outline-none focus:border-cyan-400">
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="En Curso">En Curso</option>
+                            <option value="Completada">Completada</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="pt-4 flex justify-end">
+                    <button type="button" onclick="guardarTarea()" class="px-5 py-2.5 rounded-xl bg-primary hover:bg-indigo-600 text-xs font-bold text-white transition cursor-pointer shadow-lg shadow-indigo-500/20">Guardar Tarea</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL POMODORO -->
+    <div id="modal-pomodoro" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-slate-800 border border-slate-700 p-8 rounded-2xl text-center relative max-w-sm w-full shadow-2xl">
+            <button type="button" onclick="cerrarModal('modal-pomodoro')" class="absolute top-4 right-4 text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <h3 class="text-white font-bold mb-4 flex items-center justify-center gap-2"><i class="fa-solid fa-stopwatch text-indigo-400"></i> Temporizador Pomodoro</h3>
+            <div class="text-5xl font-black text-cyan-400 font-mono mb-6" id="pomodoro-display">25:00</div>
+            <div class="flex justify-center gap-3">
+                <button onclick="iniciarPomodoro()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs transition cursor-pointer flex-1">Iniciar</button>
+                <button onclick="pausarPomodoro()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs transition cursor-pointer flex-1">Pausar</button>
+                <button onclick="reiniciarPomodoro()" class="bg-slate-700 hover:bg-slate-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition cursor-pointer">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CORREOS -->
+    <div id="modal-correos" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-slate-800 border border-slate-700 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden">
+            <div class="p-4 bg-slate-900 border-b border-slate-700 flex justify-between items-center">
+                <h3 class="font-bold text-white text-base"><i class="fa-solid fa-inbox text-cyan-400"></i> Historial de Emisión</h3>
+                <button type="button" onclick="cerrarModal('modal-correos')" class="text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div id="lista-buzon-correos" class="p-6 space-y-3 max-h-96 overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <!-- MODAL DETALLE TAREA -->
+    <div id="modal-detalle-tarea" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-slate-800 border border-slate-700 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden">
+            <div class="p-4 bg-slate-900 border-b border-slate-700 flex justify-between items-center">
+                <h3 class="font-bold text-white text-base"><i class="fa-solid fa-list-check text-cyan-400"></i> Detalle de Tarea</h3>
+                <button type="button" onclick="cerrarModal('modal-detalle-tarea')" class="text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <input type="hidden" id="detalle-tarea-id">
+                <div>
+                    <h4 id="detalle-tarea-titulo" class="text-lg font-bold text-white mb-1">Título de la Tarea</h4>
+                    <p id="detalle-tarea-desc" class="text-sm text-slate-400">Descripción detallada...</p>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 text-xs text-slate-300 bg-slate-900/50 p-3 rounded-xl border border-slate-700">
+                    <p><strong>Responsable:</strong> <span id="detalle-tarea-resp" class="text-white"></span></p>
+                    <p><strong>Estado:</strong> 
+                        <select id="detalle-tarea-estado-select" onchange="actualizarEstadoDesdeDetalle(event)" class="bg-slate-800 border border-slate-600 rounded px-2 py-1 text-white text-[10px] cursor-pointer outline-none focus:border-cyan-400 ml-1">
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="En Curso">En Curso</option>
+                            <option value="Completada">Completada</option>
+                        </select>
+                    </p>
+                    <p><strong>Fecha Límite:</strong> <span id="detalle-tarea-fecha" class="text-cyan-400 font-semibold"></span></p>
+                    <p><strong>Tipo:</strong> <span id="detalle-tarea-tipo" class="text-white"></span></p>
+                </div>
+                
+                <div class="pt-4 border-t border-slate-700">
+                    <div class="flex justify-between items-center mb-3">
+                        <h5 class="text-sm font-bold text-white"><i class="fa-solid fa-paperclip text-slate-400"></i> Archivos Adjuntos</h5>
+                        <label class="bg-slate-700 hover:bg-slate-600 text-white text-xs px-3 py-1.5 rounded-lg cursor-pointer transition">
+                            <i class="fa-solid fa-plus mr-1"></i> Añadir
+                            <input type="file" id="input-archivo-nuevo" class="hidden" onchange="subirArchivoTarea(event)">
+                        </label>
+                    </div>
+                    <div id="lista-archivos-tarea" class="space-y-2 max-h-40 overflow-y-auto"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL NUEVO COLABORADOR -->
+    <div id="modal-colaborador" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-slate-800 border border-slate-700 w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden">
+            <div class="p-4 bg-slate-900 border-b border-slate-700 flex justify-between items-center">
+                <h3 class="font-bold text-white text-base"><i class="fa-solid fa-user-plus text-cyan-400"></i> Nuevo Colaborador</h3>
+                <button type="button" onclick="cerrarModal('modal-colaborador')" class="text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-slate-300">Nombre del Colaborador</label>
+                    <input type="text" id="colab-nombre" placeholder="Ej. Ana Gómez" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-cyan-400">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-slate-300">Rol o Cargo</label>
+                    <input type="text" id="colab-rol" placeholder="Ej. Desarrollador Frontend" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-cyan-400">
+                </div>
+                <div class="pt-4">
+                    <button type="button" onclick="guardarColaborador()" class="w-full py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold transition cursor-pointer shadow-lg shadow-cyan-500/20">Registrar Colaborador</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PREVIEW -->
+    <div id="modal-preview-archivo" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-slate-800 border border-slate-700 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+            <div class="p-4 bg-slate-900 border-b border-slate-700 flex justify-between items-center">
+                <h3 class="font-bold text-white text-base flex items-center gap-2">
+                    <i class="fa-solid fa-file-lines text-cyan-400"></i> <span id="preview-archivo-titulo">Archivo.txt</span>
+                </h3>
+                <button type="button" onclick="cerrarModal('modal-preview-archivo')" class="text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1">
+                <pre id="preview-archivo-contenido" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 text-xs text-slate-300 whitespace-pre-wrap font-mono"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ESTADO GLOBAL
+        let estadoApp = {
+            tareas: [
+                { id: 1, titulo: "Preparar auditoría Q3", desc: "Recopilar documentación contable del trimestre.", responsable: "Carlos Pérez", prioridad: "Alta", fecha: "2026-07-28", tipo: "Administrativa", estado: "Pendiente", archivos: [{nombre: "documento_q3.txt", contenido: "=== REPORTE DE AUDITORÍA Q3 ===\n\nFecha de inicio: 01/04/2026\nFecha de corte: 30/06/2026\n\n1. REVISIÓN DE INGRESOS\n- Ingresos reportados: $450,000 USD\n- Discrepancias encontradas: Ninguna.\n\n2. REVISIÓN DE GASTOS OPERATIVOS\n- Total de gastos: $310,000 USD\n- Nota: Se requiere justificación adicional para viáticos del equipo de ventas (Anexo B).\n\n3. CUMPLIMIENTO TRIBUTARIO\n- Retenciones aplicadas correctamente.\n- Pago de impuestos al día.\n\nConclusión preliminar: El estado financiero es estable y cumple con las normativas vigentes."}] },
+                { id: 2, titulo: "Cierre de Nómina Mensual", desc: "Procesar pagos de empleados en el portal del banco.", responsable: "Carlos Pérez", prioridad: "Alta", fecha: "2026-07-30", tipo: "Operativa", estado: "En Curso", archivos: [{nombre: "reporte_nomina_preliminar.txt", contenido: "=== REPORTE PRELIMINAR DE NÓMINA - JULIO 2026 ===\n\nTotal de empleados activos: 45\nNuevos ingresos: 2\nLiquidaciones: 0\n\nDESGLOSE DE PAGOS:\n- Salarios Base: $125,500.00\n- Horas Extras (Aprobadas): $3,240.50\n- Bonificaciones (Cumplimiento KPI): $8,500.00\n- Deducciones (Salud/Pensión): -$10,450.00\n\nTOTAL A DISPERSAR: $126,790.50\n\nObservaciones: \n- El pago a Ana Gómez incluye retroactivo del mes pasado.\n- Pendiente aprobación final de gerencia."}] },
+                { id: 3, titulo: "Actualización de Políticas", desc: "Revisar los manuales internos de operación.", responsable: "Usuario Registrado", prioridad: "Media", fecha: "2026-08-05", tipo: "Administrativa", estado: "Pendiente", archivos: [{nombre: "borrador_politicas_v2.txt", contenido: "=== MANUAL DE POLÍTICAS INTERNAS V2.0 (BORRADOR) ===\n\nCAPÍTULO 4: TRABAJO REMOTO Y FLEXIBILIDAD\n\n4.1. Elegibilidad\nTodo el personal con más de 3 meses de antigüedad podrá optar por el modelo híbrido.\n\n4.2. Horarios Core\nTodos los colaboradores deben estar disponibles en el horario 'Core' de 10:00 AM a 2:00 PM (Hora Colombia) para reuniones de sincronización.\n\n4.3. Seguridad de la Información\n- Es obligatorio el uso de la VPN corporativa al conectarse desde redes públicas.\n- Los equipos deben tener el cifrado de disco activado en todo momento."}] },
+                { id: 4, titulo: "Soporte Técnico Servidor", desc: "Revisión de logs en el entorno de producción.", responsable: "Usuario Registrado", prioridad: "Baja", fecha: "2026-07-25", tipo: "Soporte", estado: "Pendiente", archivos: [{nombre: "error_log_prod_srv01.txt", contenido: "[2026-07-22 01:15:02] ERROR [DB-Connection] Failed to connect to database 'prd_main' at 192.168.1.55:5432. Connection timed out.\n[2026-07-22 01:15:05] WARN  [AuthService] Fallback to cache for user session validation.\n[2026-07-22 01:15:10] ERROR [DB-Connection] Retry 1 failed.\n[2026-07-22 01:15:15] FATAL [CoreApp] Unable to establish connection. Initiating emergency shutdown sequence to prevent data corruption.\n[2026-07-22 01:15:16] INFO  [System] Shutdown completed gracefully.\n\n--> ACCIÓN SUGERIDA: Reiniciar el servicio de Postgres y verificar reglas de firewall en el segmento 192.168.1.x."}] }
+            ],
+            correos: [
+                { id: 1, de: "gerencia@empresa.com", asunto: "🚨 Novedad: Detención Operativa - Infraestructura", cuerpo: "Se requiere aprobación inmediata de reasignación...", fechaCompleta: "2026-07-22 08:30 AM", adjunto: "Acta_Emergencia.pdf" }
+            ],
+            equipo: [
+                { nombre: "Usuario Registrado", rol: "Líder de Proyecto", tareasActivas: 2, nivelEstres: "Bajo", color: "bg-emerald-500" },
+                { nombre: "Carlos Pérez", rol: "Especialista Operativo", tareasActivas: 2, nivelEstres: "Crítico", color: "bg-rose-500" }
+            ],
+            modoEnfoqueActivo: false,
+            notificaciones: [
+                { titulo: "Sistema", mensaje: "Biorritmo listo para ejecutarse.", leida: false },
+                { titulo: "Alerta", mensaje: "Carga elevada en el equipo.", leida: false }
+            ]
+        };
+
+        let isLoginMode = true;
+        let currentUser = null;
+
+        window.onload = function() {
+            renderizarTodo();
+            cambiarVista('landing');
+            actualizarUI_Notificaciones();
+        };
+
+        function agregarNotificacion(titulo, mensaje) { estadoApp.notificaciones.unshift({ titulo, mensaje, leida: false }); actualizarUI_Notificaciones(); }
+        
+        function actualizarUI_Notificaciones() {
+            const noLeidas = estadoApp.notificaciones.filter(n => !n.leida).length;
+            const badge = document.getElementById('badge-notis');
+            if (badge) {
+                if (noLeidas > 0) { badge.innerText = noLeidas; badge.classList.remove('hidden'); badge.classList.add('flex'); }
+                else { badge.classList.add('hidden'); badge.classList.remove('flex'); }
+            }
+            const lista = document.getElementById('lista-notificaciones');
+            if (lista) {
+                lista.innerHTML = '';
+                if (estadoApp.notificaciones.length === 0) return lista.innerHTML = '<div class="p-4 text-center text-slate-400 text-xs">No hay notificaciones</div>';
+                estadoApp.notificaciones.forEach(n => lista.innerHTML += `<div class="p-3 hover:bg-slate-700/50 transition cursor-pointer ${n.leida ? 'text-slate-500' : 'text-white'}"><strong>${n.titulo}:</strong> ${n.mensaje}</div>`);
+            }
+        }
+        
+        function togglePanelNotificaciones() {
+            const panel = document.getElementById('panel-notificaciones');
+            if(panel) panel.classList.toggle('hidden');
+        }
+
+        function marcarLeidas() {
+            estadoApp.notificaciones.forEach(n => n.leida = true);
+            actualizarUI_Notificaciones();
+            mostrarToast("Notificaciones marcadas como leídas");
+        }
+
+        function cambiarVista(idVista) {
+            document.querySelectorAll('.vista').forEach(v => v.classList.add('hidden'));
+            const elementoVista = document.getElementById(`vista-${idVista}`);
+            if (elementoVista) elementoVista.classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function mostrarToast(mensaje, tipo = "success") {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            const colorBg = tipo === "success" ? "bg-emerald-600" : (tipo === "warning" ? "bg-amber-600" : "bg-rose-600");
+            const icon = tipo === "success" ? "fa-circle-check" : (tipo === "warning" ? "fa-circle-exclamation" : "fa-triangle-exclamation");
+            toast.className = `${colorBg} text-white px-4 py-3 rounded-xl shadow-2xl text-xs font-bold transition-all duration-300 transform translate-y-2 opacity-0 flex items-center space-x-2 pointer-events-auto mt-2 border border-white/20`;
+            toast.innerHTML = `<i class="fa-solid ${icon}"></i><span>${mensaje}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 50);
+            setTimeout(() => { toast.classList.add('opacity-0', 'translate-y-2'); setTimeout(() => toast.remove(), 300); }, 3800);
+        }
+
+        function abrirModal(id) { const m = document.getElementById(id); if (m) { m.classList.remove('hidden'); m.classList.add('flex'); } }
+        function cerrarModal(id) { const m = document.getElementById(id); if (m) { m.classList.add('hidden'); m.classList.remove('flex'); } }
+
+        /* LÓGICA DE AUTENTICACIÓN */
+        function verificarPerfil() {
+            if (currentUser) {
+                document.getElementById('auth-form-container').classList.add('hidden');
+                document.getElementById('auth-profile-container').classList.remove('hidden');
+                document.getElementById('auth-title').innerHTML = '<i class="fa-solid fa-id-badge text-cyan-400 mr-1"></i> Mi Perfil';
+                document.getElementById('profile-name').innerText = currentUser.nombre;
+                document.getElementById('profile-email').innerText = currentUser.email;
+            } else {
+                document.getElementById('auth-form-container').classList.remove('hidden');
+                document.getElementById('auth-profile-container').classList.add('hidden');
+                isLoginMode = true;
+                actualizarUIAuth();
+            }
+            abrirModal('modal-auth');
+        }
+
+        function toggleAuthMode() {
+            isLoginMode = !isLoginMode;
+            actualizarUIAuth();
+        }
+
+        function actualizarUIAuth() {
+            const title = document.getElementById('auth-title');
+            const nameGroup = document.getElementById('auth-name-group');
+            const nameInput = document.getElementById('auth-name');
+            const submitBtn = document.getElementById('auth-submit-btn');
+            const toggleBtn = document.getElementById('auth-toggle-btn');
+
+            if (isLoginMode) {
+                title.innerHTML = '<i class="fa-solid fa-right-to-bracket text-cyan-400 mr-1"></i> Iniciar Sesión';
+                nameGroup.classList.add('hidden');
+                nameInput.removeAttribute('required');
+                submitBtn.innerText = 'Ingresar';
+                toggleBtn.innerText = '¿No tienes cuenta? Crea una aquí.';
+            } else {
+                title.innerHTML = '<i class="fa-solid fa-user-plus text-cyan-400 mr-1"></i> Crear Cuenta';
+                nameGroup.classList.remove('hidden');
+                nameInput.setAttribute('required', 'true');
+                submitBtn.innerText = 'Registrarse';
+                toggleBtn.innerText = '¿Ya tienes cuenta? Inicia sesión.';
+            }
+        }
+
+        function procesarAuth(e) {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value;
+            
+            if (!isLoginMode) {
+                const nombre = document.getElementById('auth-name').value;
+                currentUser = { nombre: nombre, email: email };
+                mostrarToast("Cuenta creada y sesión iniciada", "success");
+                
+                // Si el usuario no existe en el equipo, lo agregamos para asignar tareas
+                if(!estadoApp.equipo.find(u => u.nombre === nombre)) {
+                    estadoApp.equipo.push({nombre: nombre, rol: "Usuario Registrado", tareasActivas: 0, nivelEstres: "Bajo", color: "bg-cyan-500"});
+                }
+            } else {
+                // Simulación simple de Login
+                let nombreMock = email.split('@')[0];
+                // Capitalizar primera letra para estética
+                nombreMock = nombreMock.charAt(0).toUpperCase() + nombreMock.slice(1); 
+                currentUser = { nombre: nombreMock, email: email };
+                mostrarToast("Sesión iniciada correctamente", "success");
+                
+                if(!estadoApp.equipo.find(u => u.nombre === nombreMock)) {
+                    estadoApp.equipo.push({nombre: nombreMock, rol: "Usuario", tareasActivas: 0, nivelEstres: "Bajo", color: "bg-cyan-500"});
+                }
+            }
+            
+            document.getElementById('label-usuario-activo').innerText = currentUser.nombre;
+            document.getElementById('label-usuario-activo').classList.remove('hidden'); // Ensure visible on mobile if needed
+            document.getElementById('auth-form').reset();
+            cerrarModal('modal-auth');
+            renderizarTodo(); // Re-renderiza para que aparezca en dropdowns
+        }
+
+        function cerrarSesion() {
+            currentUser = null;
+            document.getElementById('label-usuario-activo').innerText = "Invitado (Ingresar)";
+            cerrarModal('modal-auth');
+            mostrarToast("Sesión cerrada", "success");
+        }
+
+        function renderizarTodo() {
+            calcularCargaEquipo(); // Recalcula antes de pintar
+            renderizarDashboard();
+            renderizarAlertasDashboard(); // Renderiza las alertas dinámicas
+            renderizarTareas();
+            renderizarEquipo();
+            actualizarEstadisticas();
+        }
+
+        function calcularCargaEquipo() {
+            estadoApp.equipo.forEach(u => {
+                u.tareasActivas = estadoApp.tareas.filter(t => t.responsable === u.nombre && t.estado !== 'Completada').length;
+                if(u.tareasActivas >= 3) { u.nivelEstres = 'Crítico'; u.color = 'bg-rose-500'; }
+                else if(u.tareasActivas === 2) { u.nivelEstres = 'Moderado'; u.color = 'bg-amber-500'; }
+                else { u.nivelEstres = 'Bajo'; u.color = 'bg-emerald-500'; }
+            });
+        }
+
+        function actualizarEstadisticas() {
+            document.getElementById('stat-total').innerText = estadoApp.tareas.length;
+            const pendientes = estadoApp.tareas.filter(t => t.estado !== 'Completada').length;
+            document.getElementById('stat-pendientes').innerText = pendientes;
+            const completadas = estadoApp.tareas.length - pendientes;
+            const progreso = estadoApp.tareas.length === 0 ? 0 : Math.round((completadas / estadoApp.tareas.length) * 100);
+            document.getElementById('stat-progreso').innerText = progreso + '%';
+
+            // Actualizar Tarjeta Superior de Alertas
+            const usuariosCriticos = estadoApp.equipo.filter(u => u.nivelEstres === 'Crítico');
+            const statAlertas = document.getElementById('stat-alertas');
+            const tarjetaAlerta = document.getElementById('tarjeta-alerta-estres');
+            const tituloAlerta = document.getElementById('titulo-alerta-estres');
+
+            if (usuariosCriticos.length > 0) {
+                statAlertas.innerHTML = `<span class="text-rose-400">Revisión Requerida</span> <span class="bg-rose-500/20 text-rose-300 text-[10px] px-2 py-0.5 rounded font-bold border border-rose-500/30 ml-2">${usuariosCriticos.length} Alerta(s)</span>`;
+                tarjetaAlerta.classList.add('border-l-4', 'border-l-rose-500');
+                tarjetaAlerta.classList.remove('border-l-emerald-500');
+                tituloAlerta.classList.replace('text-slate-400', 'text-rose-400');
+                tituloAlerta.innerText = "Alertas de Salud";
+            } else {
+                statAlertas.innerHTML = `<span class="text-emerald-400">Saludable</span>`;
+                tarjetaAlerta.classList.add('border-l-4', 'border-l-emerald-500');
+                tarjetaAlerta.classList.remove('border-l-rose-500');
+                tituloAlerta.classList.replace('text-rose-400', 'text-slate-400');
+                tituloAlerta.innerText = "Estado del Equipo";
+            }
+        }
+
+        function renderizarDashboard() {
+            const tbody = document.getElementById('tabla-dashboard-tareas');
+            if(!tbody) return;
+            tbody.innerHTML = "";
+            let tareasMostrar = estadoApp.modoEnfoqueActivo ? estadoApp.tareas.filter(t => t.prioridad === 'Alta') : estadoApp.tareas.slice(0, 3);
+            if (tareasMostrar.length === 0) return tbody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-slate-500 text-xs">No hay tareas prioritarias.</td></tr>`;
+
+            tareasMostrar.forEach(t => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-700/40 transition border-b border-slate-700/50 cursor-pointer" onclick="verDetalleTarea(${t.id})">
+                        <td class="py-3 px-2">
+                            <span class="font-bold text-cyan-400 text-xs block">${t.titulo}</span>
+                            <span class="text-[10px] text-slate-500"><i class="fa-regular fa-calendar mr-1"></i>${t.fecha || 'Sin fecha definida'}</span>
+                        </td>
+                        <td class="py-3 px-2 text-xs text-slate-300">${t.responsable}</td>
+                        <td class="py-3 px-2 text-xs"><span class="bg-slate-800 px-2 py-0.5 rounded text-[10px] text-white border ${t.prioridad === 'Alta' ? 'border-rose-500' : 'border-slate-600'}">${t.prioridad}</span></td>
+                        <td class="py-3 px-2 text-right text-xs text-slate-400">
+                             <select class="bg-transparent border-none text-slate-400 outline-none cursor-pointer text-xs focus:ring-0" onclick="event.stopPropagation()" onchange="actualizarEstadoTablaDashboard(event, ${t.id})">
+                                <option value="Pendiente" ${t.estado === 'Pendiente' ? 'selected' : ''}>Pendiente</option>
+                                <option value="En Curso" ${t.estado === 'En Curso' ? 'selected' : ''}>En Curso</option>
+                                <option value="Completada" ${t.estado === 'Completada' ? 'selected' : ''}>Completada</option>
+                            </select>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+        
+        // Función para actualizar estado desde la tabla del dashboard
+        function actualizarEstadoTablaDashboard(event, id) {
+            const nuevoEstado = event.target.value;
+            const tarea = estadoApp.tareas.find(t => t.id === id);
+            if(tarea) {
+                tarea.estado = nuevoEstado;
+                mostrarToast(`Estado de '${tarea.titulo}' actualizado a ${nuevoEstado}`, "success");
+                renderizarTodo(); // Actualiza progreso y otras vistas
+            }
+        }
+
+        /* LÓGICA DE ALERTAS DE SALUD DINÁMICAS EN DASHBOARD */
+        function renderizarAlertasDashboard() {
+            const contenedor = document.getElementById('contenedor-alertas-dashboard');
+            if(!contenedor) return;
+            contenedor.innerHTML = '';
+
+            const usuariosEnRiesgo = estadoApp.equipo.filter(u => u.nivelEstres === 'Crítico');
+            
+            if (usuariosEnRiesgo.length === 0) {
+                contenedor.innerHTML = `
+                    <div class="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl flex items-center gap-3">
+                        <i class="fa-solid fa-check-circle text-emerald-400 text-xl"></i>
+                        <p class="text-xs text-emerald-300 font-medium">El equipo presenta niveles de carga de trabajo saludables.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            usuariosEnRiesgo.forEach(u => {
+                contenedor.innerHTML += `
+                    <div class="bg-rose-500/10 border border-rose-500/20 p-4 rounded-xl space-y-3 shadow-inner">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2 text-rose-400 font-bold text-xs">
+                                <i class="fa-solid fa-triangle-exclamation text-sm animate-pulse"></i>
+                                <span>Sobrecarga Detectada</span>
+                            </div>
+                            <span class="bg-rose-500/20 text-rose-300 text-[10px] px-2 py-0.5 rounded font-bold border border-rose-500/30">Acción Requerida</span>
+                        </div>
+                        <p class="text-xs text-slate-300"><strong class="text-white">${u.nombre}</strong> presenta ${u.tareasActivas} tareas complejas simultáneas.</p>
+                        
+                        <div class="bg-slate-900/60 p-2.5 rounded-lg border border-amber-500/30 flex gap-2 items-start">
+                            <i class="fa-solid fa-lightbulb text-amber-400 mt-0.5 text-sm"></i>
+                            <div>
+                                <p class="text-[10px] text-amber-300 font-bold mb-0.5 uppercase tracking-wide">Sugerencia IA</p>
+                                <p class="text-[11px] text-slate-300 leading-tight">Reasignar 1 tarea a un colaborador disponible o sugerir pausa activa inmediata.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row gap-2 pt-1">
+                            <button type="button" onclick="accionReasignarAutomatica('${u.nombre}')" class="flex-1 bg-slate-800 hover:bg-cyan-500/20 hover:border-cyan-500/50 border border-slate-600 text-white text-[10px] sm:text-xs font-bold py-2 rounded-lg transition flex justify-center items-center gap-1.5 shadow-md">
+                                <i class="fa-solid fa-shuffle text-cyan-400"></i> Reasignar IA
+                            </button>
+                            <button type="button" onclick="accionSugerirPausa('${u.nombre}')" class="flex-1 bg-slate-800 hover:bg-amber-500/20 hover:border-amber-500/50 border border-slate-600 text-white text-[10px] sm:text-xs font-bold py-2 rounded-lg transition flex justify-center items-center gap-1.5 shadow-md">
+                                <i class="fa-solid fa-mug-hot text-amber-400"></i> Sugerir Pausa
+                            </button>
+                        </div>
+                        <div class="pt-1 w-full">
+                            <button type="button" onclick="abrirModalEmergenciaConDatos('${u.nombre}')" class="w-full bg-slate-800 hover:bg-rose-500/20 hover:border-rose-500/50 border border-rose-500/30 text-white text-[10px] sm:text-xs font-bold py-2 rounded-lg transition flex justify-center items-center gap-1.5 shadow-md text-rose-300">
+                                <i class="fa-solid fa-envelope-open-text text-rose-400"></i> Escalar a Gerencia
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function abrirModalEmergenciaConDatos(nombreUsuario) {
+            abrirModal('modal-emergencia');
+            document.getElementById('emergencia-nivel').value = "ALTA - Sobrecarga de Personal";
+            document.getElementById('emergencia-descripcion').value = `Se reporta estado crítico por sobrecarga operativa del colaborador: ${nombreUsuario}. Riesgo de burnout e incumplimiento de tiempos de entrega.`;
+            document.getElementById('emergencia-accion').value = `Autorizar pausa preventiva o redistribución forzada de carga para ${nombreUsuario}.`;
+        }
+
+        function accionReasignarAutomatica(nombreUsuario) {
+            // Busca la tarea más antigua que no esté completada del usuario en riesgo
+            const tareaAReasignar = estadoApp.tareas.find(t => t.responsable === nombreUsuario && t.estado !== 'Completada');
+            if (!tareaAReasignar) return;
+
+            // Busca el usuario con la carga más baja
+            let usuarioBajaCarga = estadoApp.equipo.find(u => u.nivelEstres === 'Bajo' && u.nombre !== nombreUsuario);
+            
+            if (usuarioBajaCarga) {
+                tareaAReasignar.responsable = usuarioBajaCarga.nombre;
+                mostrarToast(`Balanceo IA: Tarea reasignada a ${usuarioBajaCarga.nombre}`, "success");
+                agregarNotificacion("Balanceo Automático", `Se reasignó la tarea '${tareaAReasignar.titulo}' de ${nombreUsuario} a ${usuarioBajaCarga.nombre} para aliviar carga.`);
+            } else {
+                mostrarToast("No hay usuarios libres. Se sugiere extender plazos.", "warning");
+                agregarNotificacion("Alerta de Capacidad", `No hay personal disponible para reasignar tareas de ${nombreUsuario}.`);
+            }
+            renderizarTodo(); // Recalcula todo y actualiza la UI
+        }
+
+        function accionSugerirPausa(nombreUsuario) {
+            mostrarToast(`Notificación de pausa enviada a ${nombreUsuario}`, "success");
+            agregarNotificacion("Bienestar Laboral", `Se emitió una recomendación de pausa activa a ${nombreUsuario}`);
+        }
+
+        function renderizarTareas(tareasFiltradas = null) {
+            const tbody = document.getElementById('tabla-gestion-tareas');
+            if(!tbody) return;
+            tbody.innerHTML = "";
+            const tareas = tareasFiltradas || estadoApp.tareas;
+
+            if (tareas.length === 0) return tbody.innerHTML = `<tr><td colspan="6" class="py-4 text-center text-slate-500 text-xs">No se encontraron tareas.</td></tr>`;
+
+            tareas.forEach(t => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-700/40 transition border-b border-slate-700/50 cursor-pointer" onclick="verDetalleTarea(${t.id})">
+                        <td class="py-4 px-3">
+                            <span class="font-bold text-cyan-400 block text-sm mb-1">${t.titulo}</span>
+                            <span class="text-[11px] text-slate-400 line-clamp-1">${t.desc}</span>
+                        </td>
+                        <td class="py-4 px-3 text-xs text-slate-300">${t.responsable}</td>
+                        <td class="py-4 px-3 text-xs text-slate-400">
+                            <span class="block">${t.prioridad}</span>
+                            <span class="text-[10px] text-slate-500">${t.tipo || 'Operativa'}</span>
+                        </td>
+                        <td class="py-4 px-3 text-xs font-semibold ${t.fecha ? 'text-slate-300' : 'text-slate-600'}">${t.fecha || 'N/A'}</td>
+                        <td class="py-4 px-3 text-xs text-slate-400" onclick="event.stopPropagation()">
+                             <select class="bg-slate-800 border border-slate-600 rounded px-2 py-1 text-white text-xs cursor-pointer outline-none focus:border-cyan-400" onchange="actualizarEstadoTablaGeneral(event, ${t.id})">
+                                <option value="Pendiente" ${t.estado === 'Pendiente' ? 'selected' : ''}>Pendiente</option>
+                                <option value="En Curso" ${t.estado === 'En Curso' ? 'selected' : ''}>En Curso</option>
+                                <option value="Completada" ${t.estado === 'Completada' ? 'selected' : ''}>Completada</option>
+                            </select>
+                        </td>
+                        <td class="py-4 px-3 text-right whitespace-nowrap" onclick="event.stopPropagation()">
+                            <button onclick="editarTarea(${t.id})" class="text-slate-500 hover:text-cyan-400 p-1.5 cursor-pointer transition" title="Editar Tarea"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="eliminarTarea(${t.id})" class="text-slate-500 hover:text-rose-400 p-1.5 cursor-pointer transition" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+        
+        // Función para actualizar estado desde la tabla general de tareas
+        function actualizarEstadoTablaGeneral(event, id) {
+             const nuevoEstado = event.target.value;
+            const tarea = estadoApp.tareas.find(t => t.id === id);
+            if(tarea) {
+                tarea.estado = nuevoEstado;
+                mostrarToast(`Estado de '${tarea.titulo}' actualizado a ${nuevoEstado}`, "success");
+                renderizarTodo(); // Actualiza progreso y otras vistas
+            }
+        }
+
+        function actualizarListaResponsables(seleccionado = null) {
+            const selectResp = document.getElementById('task-responsable');
+            if(!selectResp) return;
+            selectResp.innerHTML = '';
+            estadoApp.equipo.forEach(u => {
+                selectResp.innerHTML += `<option value="${u.nombre}">${u.nombre}</option>`;
+            });
+            if(seleccionado) selectResp.value = seleccionado;
+            else if(currentUser) selectResp.value = currentUser.nombre;
+        }
+
+        function abrirModalTarea() { 
+            document.getElementById('task-edit-id').value = '';
+            document.getElementById('modal-tarea-titulo').innerText = 'Crear Nueva Tarea';
+            
+            document.getElementById('task-titulo').value = ''; 
+            document.getElementById('task-desc').value = ''; 
+            document.getElementById('task-prioridad').value = 'Media';
+            document.getElementById('task-tipo').value = 'Operativa';
+            document.getElementById('task-estado').value = 'Pendiente';
+            
+            const hoy = new Date().toISOString().split('T')[0];
+            document.getElementById('task-fecha').value = hoy;
+            
+            actualizarListaResponsables();
+            abrirModal('modal-tarea'); 
+        }
+
+        function editarTarea(id) {
+            const tarea = estadoApp.tareas.find(t => t.id === id);
+            if (!tarea) return;
+
+            document.getElementById('task-edit-id').value = tarea.id;
+            document.getElementById('modal-tarea-titulo').innerText = 'Editar Tarea Existente';
+            
+            document.getElementById('task-titulo').value = tarea.titulo;
+            document.getElementById('task-desc').value = tarea.desc;
+            document.getElementById('task-prioridad').value = tarea.prioridad;
+            document.getElementById('task-tipo').value = tarea.tipo || 'Operativa';
+            document.getElementById('task-fecha').value = tarea.fecha || '';
+            document.getElementById('task-estado').value = tarea.estado || 'Pendiente';
+            
+            actualizarListaResponsables(tarea.responsable);
+            abrirModal('modal-tarea');
+        }
+        
+        function guardarTarea() {
+            const idEdicion = document.getElementById('task-edit-id').value;
+            const titulo = document.getElementById('task-titulo').value.trim();
+            const desc = document.getElementById('task-desc').value;
+            const responsable = document.getElementById('task-responsable').value;
+            const prioridad = document.getElementById('task-prioridad').value;
+            const tipo = document.getElementById('task-tipo').value;
+            const fecha = document.getElementById('task-fecha').value;
+            const estado = document.getElementById('task-estado').value;
+            
+            if (!titulo) return mostrarToast("Ingresa un título para la tarea", "error");
+            
+            if (idEdicion) {
+                const tarea = estadoApp.tareas.find(t => t.id === parseInt(idEdicion));
+                if (tarea) {
+                    tarea.titulo = titulo;
+                    tarea.desc = desc;
+                    tarea.responsable = responsable;
+                    tarea.prioridad = prioridad;
+                    tarea.tipo = tipo;
+                    tarea.fecha = fecha;
+                    tarea.estado = estado;
+                    mostrarToast("Tarea actualizada correctamente", "success");
+                    agregarNotificacion("Tareas", `Tarea actualizada: ${titulo}`);
+                }
+            } else {
+                estadoApp.tareas.unshift({
+                    id: Date.now(), 
+                    titulo: titulo, 
+                    desc: desc,
+                    responsable: responsable, 
+                    prioridad: prioridad,
+                    tipo: tipo,
+                    fecha: fecha,
+                    estado: estado,
+                    archivos: []
+                });
+                mostrarToast("Tarea creada exitosamente", "success");
+                agregarNotificacion("Tareas", `Nueva tarea asignada a ${responsable}`);
+            }
+            
+            cerrarModal('modal-tarea');
+            renderizarTodo();
+        }
+
+        function eliminarTarea(id) {
+            const tarea = estadoApp.tareas.find(t => t.id === id);
+            if(tarea) {
+                estadoApp.tareas = estadoApp.tareas.filter(t => t.id !== id);
+                mostrarToast("Tarea eliminada", "success");
+                agregarNotificacion("Tareas", `Tarea eliminada: ${tarea.titulo}`);
+                renderizarTodo();
+            }
+        }
+
+        function verDetalleTarea(id) {
+            const tarea = estadoApp.tareas.find(t => t.id === id);
+            if(!tarea) return;
+            
+            document.getElementById('detalle-tarea-id').value = id;
+            document.getElementById('detalle-tarea-titulo').innerText = tarea.titulo;
+            document.getElementById('detalle-tarea-desc').innerText = tarea.desc;
+            document.getElementById('detalle-tarea-resp').innerText = tarea.responsable;
+            document.getElementById('detalle-tarea-estado-select').value = tarea.estado;
+            document.getElementById('detalle-tarea-fecha').innerText = tarea.fecha || 'Sin Asignar';
+            document.getElementById('detalle-tarea-tipo').innerText = tarea.tipo || 'General';
+            
+            renderizarArchivosTarea(tarea);
+            abrirModal('modal-detalle-tarea');
+        }
+        
+        // Función para actualizar el estado desde el modal de detalles
+        function actualizarEstadoDesdeDetalle(event) {
+            const id = parseInt(document.getElementById('detalle-tarea-id').value);
+            const nuevoEstado = event.target.value;
+            const tarea = estadoApp.tareas.find(t => t.id === id);
+            
+            if(tarea) {
+                tarea.estado = nuevoEstado;
+                mostrarToast(`Estado actualizado a ${nuevoEstado}`, "success");
+                renderizarTodo(); // Re-renderiza para actualizar el progreso global y tablas de fondo
+            }
+        }
+
+        function filtrarTareas() {
+            const query = document.getElementById('input-buscar-tarea').value.toLowerCase();
+            const prioridad = document.getElementById('filtro-prioridad').value;
+            const filtradas = estadoApp.tareas.filter(t => {
+                const matchTexto = t.titulo.toLowerCase().includes(query) || t.responsable.toLowerCase().includes(query);
+                const matchPrioridad = prioridad === 'todas' || t.prioridad === prioridad;
+                return matchTexto && matchPrioridad;
+            });
+            renderizarTareas(filtradas);
+        }
+
+        function renderizarEquipo() {
+            const cont = document.getElementById('contenedor-usuarios-salud');
+            if(!cont) return;
+            cont.innerHTML = "";
+            estadoApp.equipo.forEach(u => {
+                cont.innerHTML += `
+                    <div class="bg-slate-800 p-6 rounded-2xl border ${u.nivelEstres === 'Crítico' ? 'border-rose-500/50 shadow-rose-500/10' : 'border-slate-700/60'} shadow-xl relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-2 h-full ${u.color}"></div>
+                        <div class="flex items-center gap-3 border-b border-slate-700/50 pb-3">
+                            <div class="w-10 h-10 rounded-full bg-slate-700 flex justify-center items-center text-lg text-slate-300 font-bold"><i class="fa-solid fa-user"></i></div>
+                            <div>
+                                <h3 class="font-bold text-white text-sm">${u.nombre}</h3>
+                                <p class="text-[10px] text-slate-400 uppercase tracking-wider">${u.rol}</p>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-end mt-4">
+                            <div>
+                                <p class="text-xs text-slate-400 mb-1">Carga Actual:</p>
+                                <p class="font-black text-white text-xl">${u.tareasActivas} Tareas</p>
+                            </div>
+                            <span class="text-[10px] font-bold px-2 py-1 rounded bg-slate-900 border ${u.nivelEstres === 'Crítico' ? 'text-rose-400 border-rose-500/30' : 'text-emerald-400 border-emerald-500/30'}">Estrés ${u.nivelEstres}</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderizarArchivosTarea(tarea) {
+            const contenedor = document.getElementById('lista-archivos-tarea');
+            contenedor.innerHTML = '';
+            if (!tarea.archivos || tarea.archivos.length === 0) {
+                contenedor.innerHTML = '<p class="text-xs text-slate-500 italic px-1">No hay archivos adjuntos.</p>';
+                return;
+            }
+            tarea.archivos.forEach((arch, index) => {
+                contenedor.innerHTML += `
+                    <div class="flex items-center justify-between bg-slate-900/50 p-2 rounded-lg border border-slate-700 hover:border-slate-500 transition">
+                        <div class="flex items-center gap-2 overflow-hidden">
+                            <i class="fa-solid fa-file-lines text-cyan-400 text-sm"></i>
+                            <span class="text-xs text-slate-300 truncate font-mono">${arch.nombre}</span>
+                        </div>
+                        <div class="flex items-center gap-1 shrink-0">
+                            <button onclick="previsualizarArchivo(${tarea.id}, ${index})" class="text-slate-400 hover:text-cyan-400 p-1.5 transition cursor-pointer" title="Previsualizar"><i class="fa-solid fa-eye"></i></button>
+                            <button onclick="descargarArchivoMock(${tarea.id}, ${index})" class="text-slate-400 hover:text-emerald-400 p-1.5 transition cursor-pointer" title="Descargar como TXT"><i class="fa-solid fa-download"></i></button>
+                            <button onclick="eliminarArchivoTarea(${tarea.id}, ${index})" class="text-slate-400 hover:text-rose-400 p-1.5 transition cursor-pointer" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        
+        function previsualizarArchivo(tid, fIndex) {
+            const tarea = estadoApp.tareas.find(t => t.id === tid);
+            if(tarea && tarea.archivos[fIndex]) {
+                const archivo = tarea.archivos[fIndex];
+                document.getElementById('preview-archivo-titulo').innerText = archivo.nombre;
+                document.getElementById('preview-archivo-contenido').innerText = archivo.contenido;
+                abrirModal('modal-preview-archivo');
+            }
+        }
+        
+        function descargarArchivoMock(tid, fIndex) {
+            const tarea = estadoApp.tareas.find(t => t.id === tid);
+            if(tarea && tarea.archivos[fIndex]) {
+                const archivo = tarea.archivos[fIndex];
+                const blob = new Blob([archivo.contenido], { type: 'text/plain;charset=utf-8' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = archivo.nombre.endsWith('.txt') ? archivo.nombre : archivo.nombre + '.txt';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                mostrarToast("Archivo descargado", "success");
+            }
+        }
+        
+        function subirArchivoTarea(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const tid = parseInt(document.getElementById('detalle-tarea-id').value);
+            const tarea = estadoApp.tareas.find(t => t.id === tid);
+            
+            const reader = new FileReader();
+            reader.onload = function(evento) {
+                if(!tarea.archivos) tarea.archivos = [];
+                tarea.archivos.push({
+                    nombre: file.name,
+                    contenido: evento.target.result || "Contenido no disponible como texto."
+                });
+                renderizarArchivosTarea(tarea);
+                mostrarToast("Archivo adjuntado correctamente", "success");
+                agregarNotificacion("Archivos", `Archivo adjuntado: ${file.name}`);
+            };
+            reader.readAsText(file);
+        }
+        
+        function eliminarArchivoTarea(tid, fIndex) {
+            const tarea = estadoApp.tareas.find(t => t.id === tid);
+            if(tarea && tarea.archivos) {
+                const nombreArchivo = tarea.archivos[fIndex].nombre;
+                tarea.archivos.splice(fIndex, 1);
+                renderizarArchivosTarea(tarea);
+                mostrarToast("Archivo eliminado", "success");
+                agregarNotificacion("Archivos", `Archivo eliminado: ${nombreArchivo}`);
+            }
+        }
+
+        function abrirModalExportar() {
+            if (!estadoApp.tareas || estadoApp.tareas.length === 0) {
+                return mostrarToast("No hay tareas registradas para exportar", "warning");
+            }
+
+            let contenido = `==================================================\n`;
+            contenido += `         TASKFLOW PRO - REPORTE DE TAREAS         \n`;
+            contenido += `==================================================\n`;
+            contenido += `Fecha de Generación: ${obtenerFechaHoraActual()}\n`;
+            contenido += `Total de Tareas: ${estadoApp.tareas.length}\n`;
+            contenido += `Cumplimiento Global: ${document.getElementById('stat-progreso')?.innerText || '0%'}\n`;
+            contenido += `--------------------------------------------------\n\n`;
+
+            estadoApp.tareas.forEach((t, i) => {
+                contenido += `[TAREA #${i + 1}] ${t.titulo}\n`;
+                contenido += `Responsable : ${t.responsable}\n`;
+                contenido += `Prioridad   : ${t.prioridad}\n`;
+                contenido += `Tipo        : ${t.tipo || 'Operativa'}\n`;
+                contenido += `Estado      : ${t.estado}\n`;
+                contenido += `Fecha Límite: ${t.fecha || 'Sin fecha asignada'}\n`;
+                contenido += `Descripción : ${t.desc || 'Sin descripción'}\n`;
+                if (t.archivos && t.archivos.length > 0) {
+                    contenido += `Archivos    : ${t.archivos.map(a => a.nombre).join(', ')}\n`;
+                }
+                contenido += `--------------------------------------------------\n\n`;
+            });
+
+            contenido += `* Fin del Reporte Oficial TaskFlow Pro *\n`;
+
+            const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `TaskFlow_Reporte_${new Date().getTime()}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+            mostrarToast("Reporte TXT generado y descargado", "success");
+            agregarNotificacion("Exportación", "Reporte general descargado exitosamente.");
+        }
+
+        function abrirModalEmergencia(tipo) {
+            const titulo = document.getElementById('titulo-modal-emergencia');
+            const desc = document.getElementById('desc-modal-emergencia');
+            const icono = document.getElementById('icono-modal-emergencia');
+            
+            if(tipo === 'emergencia') {
+                titulo.innerText = 'Emitir Reporte de Novedad Crítica';
+                desc.innerHTML = `Este formulario emite una <strong class="text-rose-400">Novedad de Emergencia Oficial</strong>. Puedes descargar el acta en TXT, previsualizarla o enviarla por <strong class="text-cyan-400">correo electrónico real</strong>.`;
+                icono.className = 'fa-solid fa-triangle-exclamation text-xl md:text-2xl text-rose-400 animate-pulse';
+            } else {
+                titulo.innerText = 'Registrar Novedad Estándar';
+                desc.innerHTML = `Registra una novedad operativa para el control interno. Puedes documentarla y enviarla por correo.`;
+                icono.className = 'fa-solid fa-circle-info text-xl md:text-2xl text-amber-400';
+            }
+            abrirModal('modal-emergencia');
+        }
+
+        function generarContenidoActaEmergencia() {
+            const nivel = document.getElementById('emergencia-nivel').value;
+            const area = document.getElementById('emergencia-area').value;
+            const correo = document.getElementById('emergencia-email').value;
+            const desc = document.getElementById('emergencia-descripcion').value;
+            const accion = document.getElementById('emergencia-accion').value;
+
+            let contenido = `========================================================\n`;
+            contenido += `         ACTA OFICIAL DE NOVEDAD / EMERGENCIA           \n`;
+            contenido += `========================================================\n\n`;
+            contenido += `Fecha y Hora de Emisión: ${obtenerFechaHoraActual()}\n`;
+            contenido += `Usuario Emisor: ${currentUser ? currentUser.nombre : 'Sistema Automatizado'}\n`;
+            contenido += `Destinatario Notificado: ${correo}\n\n`;
+            contenido += `--------------------------------------------------------\n`;
+            contenido += `[DETALLES DE LA INCIDENCIA]\n`;
+            contenido += `Nivel de Criticidad: ${nivel}\n`;
+            contenido += `Área Afectada:       ${area}\n\n`;
+            contenido += `[DESCRIPCIÓN DE LA CAUSA RAÍZ]\n`;
+            contenido += `${desc || 'No se proporcionó descripción detallada.'}\n\n`;
+            contenido += `[ACCIÓN INMEDIATA REQUERIDA / SUGERIDA]\n`;
+            contenido += `${accion || 'Pendiente de evaluación gerencial.'}\n`;
+            contenido += `--------------------------------------------------------\n\n`;
+            contenido += `* Documento generado automáticamente por TaskFlow Pro *\n`;
+            contenido += `* Código de Verificación: TFP-EMG-${Date.now().toString().slice(-6)} *\n`;
+            
+            return contenido;
+        }
+
+        function previsualizarActaTXT() {
+            const contenido = generarContenidoActaEmergencia();
+            document.getElementById('preview-archivo-titulo').innerText = 'Acta_Novedad_Preliminar.txt';
+            document.getElementById('preview-archivo-contenido').innerText = contenido;
+            abrirModal('modal-preview-archivo');
+        }
+
+        function descargarActaTXT() {
+            const contenido = generarContenidoActaEmergencia();
+            const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Acta_Novedad_${new Date().getTime()}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            mostrarToast("Acta descargada exitosamente", "success");
+        }
+
+        /* ENVÍO REAL DE CORREOS VÍA MAILTO (Simulación de API para uso estático) */
+        function enviarEmergenciaAPI() {
+            const btn = document.getElementById('btn-enviar-correo-real');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Procesando Envío...';
+            btn.disabled = true;
+
+            const correo = document.getElementById('emergencia-email').value;
+            const nivel = document.getElementById('emergencia-nivel').value;
+            const contenidoTexto = generarContenidoActaEmergencia();
+            
+            setTimeout(() => {
+                // Registrar en el buzón interno
+                estadoApp.correos.unshift({
+                    id: Date.now(),
+                    de: currentUser ? currentUser.email : "sistema@taskflow.local",
+                    asunto: nivel,
+                    cuerpo: document.getElementById('emergencia-descripcion').value || "Sin descripción",
+                    fechaCompleta: obtenerFechaHoraActual(),
+                    adjunto: "Acta_Generada_TXT"
+                });
+                actualizarBuzonUI();
+                
+                // Preparar enlace mailto
+                const asuntoCodificado = encodeURIComponent(`Reporte TaskFlow: ${nivel}`);
+                const cuerpoCodificado = encodeURIComponent(contenidoTexto);
+                const mailtoLink = `mailto:${correo}?subject=${asuntoCodificado}&body=${cuerpoCodificado}`;
+                
+                // Abrir cliente de correo
+                window.location.href = mailtoLink;
+
+                mostrarToast("Redirigiendo a tu cliente de correo local...", "success");
+                agregarNotificacion("Sistema de Correos", `Borrador preparado para ${correo}`);
+                
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Enviar Correo Real';
+                btn.disabled = false;
+                cerrarModal('modal-emergencia');
+            }, 1200);
+        }
+
+        function actualizarBuzonUI() {
+            const badge = document.getElementById('badge-correos');
+            if (badge) badge.innerText = estadoApp.correos.length;
+        }
+
+        function abrirBuzonCorreos() {
+            const lista = document.getElementById('lista-buzon-correos');
+            lista.innerHTML = '';
+            if (estadoApp.correos.length === 0) {
+                lista.innerHTML = '<p class="text-center text-slate-400 text-sm py-4">Bandeja vacía</p>';
+            } else {
+                estadoApp.correos.forEach(c => {
+                    lista.innerHTML += `
+                        <div class="bg-slate-900 border border-slate-700 p-4 rounded-xl space-y-2 hover:border-cyan-500/50 transition cursor-pointer">
+                            <div class="flex justify-between items-start">
+                                <span class="text-xs font-bold text-slate-300"><i class="fa-solid fa-user-circle mr-1"></i> ${c.de}</span>
+                                <span class="text-[10px] text-slate-500">${c.fechaCompleta}</span>
+                            </div>
+                            <h4 class="text-sm font-bold text-white">${c.asunto}</h4>
+                            <p class="text-xs text-slate-400 line-clamp-2">${c.cuerpo}</p>
+                            <div class="flex items-center text-[10px] text-cyan-400 mt-2">
+                                <i class="fa-solid fa-paperclip mr-1"></i> ${c.adjunto}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            abrirModal('modal-correos');
+        }
+
+        function abrirModalColaborador() {
+            document.getElementById('colab-nombre').value = '';
+            document.getElementById('colab-rol').value = '';
+            abrirModal('modal-colaborador');
+        }
+
+        function guardarColaborador() {
+            const nombre = document.getElementById('colab-nombre').value.trim();
+            const rol = document.getElementById('colab-rol').value.trim() || 'Colaborador';
+            if(!nombre) return mostrarToast("Ingresa el nombre del colaborador", "error");
+            
+            estadoApp.equipo.push({
+                nombre: nombre,
+                rol: rol,
+                tareasActivas: 0,
+                nivelEstres: "Bajo",
+                color: "bg-emerald-500"
+            });
+            mostrarToast("Colaborador añadido exitosamente", "success");
+            agregarNotificacion("Equipo", `${nombre} se unió al equipo.`);
+            cerrarModal('modal-colaborador');
+            renderizarTodo();
+        }
+
+        function ejecutarBioRitmo() {
+            estadoApp.modoEnfoqueActivo = true;
+            document.getElementById('widget-biorritmo').classList.add('hidden');
+            document.getElementById('panel-enfoque-activo').classList.remove('hidden');
+            mostrarToast("Modo Enfoque Activado: Prioridades reordenadas", "success");
+            renderizarDashboard();
+        }
+
+        function cerrarModoEnfoque() {
+            estadoApp.modoEnfoqueActivo = false;
+            document.getElementById('widget-biorritmo').classList.remove('hidden');
+            document.getElementById('panel-enfoque-activo').classList.add('hidden');
+            mostrarToast("Modo Enfoque Desactivado", "warning");
+            renderizarDashboard();
+        }
+
+        function mostrarCheckoutEnPlanes(nombrePlan, precio) {
+            document.getElementById('checkout-plan-nombre').innerText = nombrePlan;
+            document.getElementById('checkout-plan-precio').innerText = precio;
+            document.getElementById('seccion-pago-planes').classList.remove('hidden');
+            
+            // Auto scroll a la sección de pago
+            setTimeout(() => {
+                document.getElementById('seccion-pago-planes').scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }, 100);
+        }
+
+        function cancelarCompraPlanes() {
+            document.getElementById('seccion-pago-planes').classList.add('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function cambiarMetodoPagoPlanes(metodo) {
+            if (metodo === 'tarjeta') {
+                document.getElementById('form-tarjeta-planes').classList.remove('hidden');
+                document.getElementById('form-banco-planes').classList.add('hidden');
+            } else {
+                document.getElementById('form-tarjeta-planes').classList.add('hidden');
+                document.getElementById('form-banco-planes').classList.remove('hidden');
+            }
+        }
+
+        function procesarPagoPlanes() {
+            const btn = document.getElementById('btn-procesar-pago-planes');
+            const icono = document.getElementById('icono-pago-planes');
+            const texto = document.getElementById('texto-pago-planes');
+            const planSeleccionado = document.getElementById('checkout-plan-nombre').innerText;
+            
+            icono.className = 'fa-solid fa-spinner fa-spin';
+            texto.innerText = 'Verificando transacción...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                icono.className = 'fa-solid fa-circle-check';
+                texto.innerText = 'Pago Exitoso';
+                btn.classList.replace('bg-emerald-500', 'bg-cyan-500');
+                
+                mostrarToast(`¡Felicidades! Has adquirido el ${planSeleccionado}`, "success");
+                agregarNotificacion("Suscripción", `Plan ${planSeleccionado} activado.`);
+                
+                setTimeout(() => {
+                    cancelarCompraPlanes();
+                    cambiarVista('dashboard');
+                    // Reset botón
+                    icono.className = 'fa-solid fa-lock';
+                    texto.innerText = 'Procesar Pago Ahora';
+                    btn.classList.replace('bg-cyan-500', 'bg-emerald-500');
+                    btn.disabled = false;
+                }, 2000);
+            }, 2500);
+        }
+
+        /* POMODORO TIMER LOGIC */
+        let pomodoroInterval;
+        let pomodoroTime = 1500; // 25 minutes
+        let isPomodoroRunning = false;
+
+        function updatePomodoroDisplay() {
+            const m = Math.floor(pomodoroTime / 60).toString().padStart(2, '0');
+            const s = (pomodoroTime % 60).toString().padStart(2, '0');
+            document.getElementById('pomodoro-display').innerText = `${m}:${s}`;
+        }
+
+        function iniciarPomodoro() {
+            if (isPomodoroRunning) return;
+            isPomodoroRunning = true;
+            pomodoroInterval = setInterval(() => {
+                if (pomodoroTime > 0) {
+                    pomodoroTime--;
+                    updatePomodoroDisplay();
+                } else {
+                    clearInterval(pomodoroInterval);
+                    isPomodoroRunning = false;
+                    mostrarToast("¡Pomodoro Finalizado! Tómate un descanso.", "success");
+                    agregarNotificacion("Pomodoro", "Sesión de 25m completada.");
+                    // Play a sound (optional, requires user interaction first usually, omitted for simplicity)
+                }
+            }, 1000);
+        }
+
+        function pausarPomodoro() {
+            clearInterval(pomodoroInterval);
+            isPomodoroRunning = false;
+        }
+
+        function reiniciarPomodoro() {
+            pausarPomodoro();
+            pomodoroTime = 1500;
+            updatePomodoroDisplay();
+        }
+
+        function abrirModalPomodoro() {
+            updatePomodoroDisplay();
+            abrirModal('modal-pomodoro');
+        }
+
+        function obtenerFechaHoraActual() {
+            const now = new Date();
+            return now.toLocaleString('es-ES', { 
+                year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit'
+            });
+        }
+    </script>
+</body>
+</html>
