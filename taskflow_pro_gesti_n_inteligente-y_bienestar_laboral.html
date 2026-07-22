@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskFlow Pro - Gestión Inteligente y Bienestar Laboral</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4f46e5',
+                        secondary: '#06b6d4',
+                        darkBg: '#0f172a'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans antialiased min-h-screen flex flex-col selection:bg-cyan-500 selection:text-slate-950">
+
+    <!-- HEADER / NAVEGACIÓN -->
+    <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="cambiarVista('landing')">
+                <div class="bg-primary p-2 rounded-xl text-white font-bold text-xl shadow-lg shadow-indigo-500/30">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+                <span class="text-xl font-extrabold tracking-wide text-white">TaskFlow <span class="text-cyan-400">Pro</span></span>
+            </div>
+            
+            <nav class="hidden md:flex space-x-6 text-sm font-medium">
+                <button type="button" onclick="cambiarVista('landing')" id="nav-landing" class="text-cyan-400 font-bold transition cursor-pointer">Inicio</button>
+                <button type="button" onclick="cambiarVista('planes')" id="nav-planes" class="text-slate-300 hover:text-cyan-400 transition cursor-pointer">Planes</button>
+                <button type="button" onclick="cambiarVista('dashboard')" id="nav-dashboard" class="text-slate-300 hover:text-cyan-400 transition cursor-pointer">Dashboard</button>
+                <button type="button" onclick="cambiarVista('tareas')" id="nav-tareas" class="text-slate-300 hover:text-cyan-400 transition cursor-pointer">Tareas</button>
+                <button type="button" onclick="cambiarVista('equipo')" id="nav-equipo" class="text-slate-300 hover:text-cyan-400 transition cursor-pointer">Carga Laboral & Salud</button>
+            </nav>
+
+            <div class="flex items-center space-x-3">
+                <!-- Botón Pomodoro -->
+                <button type="button" onclick="abrirModalPomodoro()" class="bg-indigo-600/25 hover:bg-indigo-600/40 border border-indigo-500/50 text-indigo-300 px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center space-x-1.5" title="Temporizador Pomodoro">
+                    <i class="fa-solid fa-clock"></i>
+                    <span class="hidden sm:inline">Pomodoro</span>
+                </button>
+
+                <!-- Botón Correos (Añadido/Mejorado) -->
+                <button type="button" onclick="abrirBuzonCorreos()" class="bg-rose-600/25 hover:bg-rose-600/40 border border-rose-500/50 text-rose-300 px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center space-x-1.5 relative" title="Bandeja de Entrada de Correos">
+                    <i class="fa-solid fa-envelope"></i>
+                    <span id="badge-correos" class="bg-rose-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">1</span>
+                </button>
+
+                <!-- Panel de Notificaciones -->
+                <div class="relative">
+                    <button type="button" onclick="togglePanelNotificaciones()" class="bg-slate-700 hover:bg-slate-600 w-10 h-10 rounded-xl text-slate-200 transition cursor-pointer relative flex items-center justify-center" title="Notificaciones">
+                        <i class="fa-solid fa-bell text-sm"></i>
+                        <span id="badge-notis" class="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-slate-800">2</span>
+                    </button>
+                    <div id="panel-notificaciones" class="absolute right-0 mt-2 w-80 bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl hidden z-50 overflow-hidden">
+                        <div class="p-3 bg-slate-900 border-b border-slate-700 flex justify-between items-center">
+                            <span class="text-xs font-bold text-white uppercase tracking-wider">Centro de Notificaciones</span>
+                            <button type="button" onclick="marcarLeidas()" class="text-[10px] text-cyan-400 hover:underline cursor-pointer">Marcar leídas</button>
+                        </div>
+                        <div id="lista-notificaciones" class="max-h-64 overflow-y-auto divide-y divide-slate-700/50 text-xs"></div>
+                    </div>
+                </div>
+
+                <!-- Perfil de Usuario -->
+                <button type="button" onclick="verificarPerfil()" class="bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg text-sm transition cursor-pointer flex items-center space-x-2">
+                    <i class="fa-solid fa-user-circle text-lg text-cyan-400"></i>
+                    <span id="label-usuario-activo" class="text-xs font-medium text-slate-300 hidden sm:inline">Invitado (Ingresar)</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- TOAST NOTIFICACIÓN FLOTANTE -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- VISTA 1: LANDING CON BENEFICIOS -->
+        <section id="vista-landing" class="vista space-y-16 py-8">
+            <div class="text-center max-w-3xl mx-auto space-y-4">
+                <span class="bg-indigo-500/10 text-indigo-400 text-xs font-semibold px-3 py-1 rounded-full border border-indigo-500/20">NUEVO: Escudo de Salud Laboral 🛡️</span>
+                <h1 class="text-4xl sm:text-6xl font-black tracking-tight text-white">Gestiona proyectos sin quemar a tu equipo</h1>
+                <p class="text-slate-400 text-lg">Organiza tareas, asigna prioridades de forma inteligente y cuida la carga laboral de cada colaborador en tiempo real con inteligencia artificial integrada.</p>
+                <div class="flex justify-center gap-4 pt-4">
+                    <button type="button" onclick="cambiarVista('dashboard')" class="bg-primary hover:bg-indigo-600 text-white font-semibold px-6 py-3 rounded-xl transition shadow-lg shadow-primary/30 cursor-pointer">
+                        Explorar Dashboard <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </button>
+                    <button type="button" onclick="cambiarVista('planes')" class="bg-slate-800 hover:bg-slate-700 text-white font-semibold px-6 py-3 rounded-xl border border-slate-700 transition cursor-pointer">
+                        Ver Planes
+                    </button>
+                </div>
+            </div>
+
+            <!-- SECCIÓN DE BENEFICIOS CLAVE -->
+            <div class="space-y-8">
+                <div class="text-center max-w-xl mx-auto space-y-2">
+                    <h2 class="text-3xl font-extrabold text-white">¿Por qué elegir TaskFlow Pro?</h2>
+                    <p class="text-slate-400 text-sm">Diseñado específicamente para potenciar la productividad y salvaguardar el bienestar mental de los equipos modernos en entornos de alta exigencia.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-slate-800/80 border border-slate-700/80 p-6 rounded-2xl space-y-4 shadow-xl hover:border-cyan-500/50 transition transform hover:-translate-y-1">
+                        <div class="w-12 h-12 bg-cyan-500/10 text-cyan-400 rounded-xl flex items-center justify-center text-xl font-bold">
+                            <i class="fa-solid fa-shield-heart"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white">Escudo Anti-Burnout</h3>
+                        <p class="text-sm text-slate-400">Monitoreo automático de la carga cognitiva y tareas asignadas. Detecta desequilibrios antes de que afecten el desempeño y la salud mental del equipo.</p>
+                    </div>
+
+                    <div class="bg-slate-800/80 border border-slate-700/80 p-6 rounded-2xl space-y-4 shadow-xl hover:border-primary/50 transition transform hover:-translate-y-1">
+                        <div class="w-12 h-12 bg-primary/10 text-indigo-400 rounded-xl flex items-center justify-center text-xl font-bold">
+                            <i class="fa-solid fa-brain"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white">Bio-Ritmo Integrado</h3>
+                        <p class="text-sm text-slate-400">Recomendaciones basadas en los picos de energía diaria del usuario. Incluye modo de enfoque óptimo para bloquear distracciones y maximizar el rendimiento.</p>
+                    </div>
+
+                    <div class="bg-slate-800/80 border border-slate-700/80 p-6 rounded-2xl space-y-4 shadow-xl hover:border-emerald-500/50 transition transform hover:-translate-y-1">
+                        <div class="w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-xl flex items-center justify-center text-xl font-bold">
+                            <i class="fa-solid fa-envelope-open-text"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white">Reportes Gerenciales</h3>
+                        <p class="text-sm text-slate-400">Conexión directa con buzón de correos para envío inmediato de resúmenes de estado y alertas de sobrecarga a los directivos.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VISTA 2: PLANES Y SUSCRIPCIONES -->
+        <section id="vista-planes" class="vista hidden space-y-8 py-6">
+            <div class="text-center max-w-xl mx-auto space-y-4">
+                <span class="bg-cyan-500/10 text-cyan-400 text-xs font-semibold px-3 py-1 rounded-full border border-cyan-500/20">Suscripciones Seguras</span>
+                <h2 class="text-3xl font-bold text-white">Elige el plan adecuado para ti</h2>
+                <p class="text-slate-400 text-sm">Simula la adquisición mediante pasarela bancaria o accede al panel de inmediato para explorar las funciones operativas.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-8 flex flex-col justify-between">
+                    <div>
+                        <span class="text-cyan-400 text-sm font-bold uppercase tracking-wider">Independientes</span>
+                        <h3 class="text-2xl font-bold text-white mt-1">Plan Personal</h3>
+                        <p class="text-slate-400 text-sm mt-2">Ideal para freelancers y gestión individual de tareas.</p>
+                        <div class="my-6">
+                            <span class="text-4xl font-black text-white">$10.000</span> <span class="text-slate-400 text-sm">/ mes</span>
+                        </div>
+                        <ul class="space-y-3 text-sm text-slate-300">
+                            <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i> Gestión ilimitada de tareas</li>
+                            <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i> Bio-Ritmo individual</li>
+                            <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i> Temporizador Pomodoro</li>
+                        </ul>
+                    </div>
+                    <div class="mt-8 space-y-3">
+                        <button type="button" onclick="abrirModalCheckout('Plan Personal', '$10.000')" class="w-full bg-slate-700 hover:bg-cyan-500 hover:text-slate-950 font-bold py-3 rounded-xl transition cursor-pointer shadow-md">
+                            Adquirir Plan Personal
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-b from-indigo-950/60 to-slate-800 border-2 border-primary rounded-2xl p-8 flex flex-col justify-between relative shadow-xl shadow-primary/10">
+                    <div class="absolute -top-3 right-6 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full uppercase">Más Popular</div>
+                    <div>
+                        <span class="text-indigo-400 text-sm font-bold uppercase tracking-wider">Empresas y Equipos</span>
+                        <h3 class="text-2xl font-bold text-white mt-1">Plan Corporativo</h3>
+                        <p class="text-slate-400 text-sm mt-2">Control total de carga laboral y prevención de burnout.</p>
+                        <div class="my-6">
+                            <span class="text-4xl font-black text-white">$50.000</span> <span class="text-slate-400 text-sm">/ mes</span>
+                        </div>
+                        <ul class="space-y-3 text-sm text-slate-300">
+                            <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i> Todo lo del Plan Personal</li>
+                            <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i> Escudo de Salud Laboral</li>
+                            <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i> Envío de correos a gerencia</li>
+                            <li><i class="fa-solid fa-check text-cyan-400 mr-2"></i> Reasignación de tareas dinámica</li>
+                        </ul>
+                    </div>
+                    <div class="mt-8 space-y-3">
+                        <button type="button" onclick="abrirModalCheckout('Plan Corporativo', '$50.000')" class="w-full bg-primary hover:bg-indigo-600 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-primary/30 cursor-pointer">
+                            Adquirir Plan Corporativo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VISTA 3: DASHBOARD -->
+        <section id="vista-dashboard" class="vista hidden space-y-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-800/50 p-4 rounded-2xl border border-slate-800">
+                <div>
+                    <h2 class="text-2xl font-black text-white">Dashboard General</h2>
+                    <p class="text-slate-400 text-sm">Bienvenido de nuevo. Aquí tienes el pulso actual de tus proyectos.</p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" onclick="abrirModalExportar()" class="bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold px-4 py-2 rounded-xl transition flex items-center shadow-md cursor-pointer">
+                        <i class="fa-solid fa-download mr-2"></i> Exportar
+                    </button>
+                    <button type="button" onclick="abrirModalTarea()" class="bg-primary hover:bg-indigo-600 text-white text-sm font-semibold px-4 py-2 rounded-xl transition flex items-center shadow-md cursor-pointer">
+                        <i class="fa-solid fa-plus mr-2"></i> Nueva Tarea
+                    </button>
+                </div>
+            </div>
+
+            <!-- PANEL DE ENFOQUE ACTIVO (BIORRITMO) - Inicialmente Oculto -->
+            <div id="panel-enfoque-activo" class="hidden bg-gradient-to-r from-cyan-600 to-primary p-5 rounded-2xl text-slate-950 font-bold flex justify-between items-center shadow-xl transition-all duration-500">
+                <div class="flex items-center space-x-3">
+                    <i class="fa-solid fa-brain text-2xl text-white animate-pulse"></i>
+                    <div>
+                        <h4 class="text-white text-base">Modo Enfoque Óptimo Activado</h4>
+                        <p id="biorritmo-detalle-activo" class="text-xs text-slate-100 font-normal">Sincronizando tareas con tu nivel de energía actual...</p>
+                    </div>
+                </div>
+                <button type="button" onclick="cerrarModoEnfoque()" class="bg-slate-900 text-white px-3 py-1.5 rounded-xl text-xs hover:bg-slate-800 transition cursor-pointer shadow-md">Desactivar</button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700/60">
+                    <span class="text-slate-400 text-xs font-bold uppercase tracking-wider">Proyectos</span>
+                    <div class="text-3xl font-black text-white mt-2 flex items-baseline justify-between">
+                        <span>4</span>
+                        <span class="text-xs text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded">+1 este mes</span>
+                    </div>
+                </div>
+                <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700/60">
+                    <span class="text-slate-400 text-xs font-bold uppercase tracking-wider">Pendientes</span>
+                    <div class="text-3xl font-black text-white mt-2 flex items-baseline justify-between">
+                        <span id="stat-pendientes">5</span>
+                        <span class="text-xs text-amber-400 font-semibold bg-amber-500/10 px-2 py-0.5 rounded">En curso</span>
+                    </div>
+                </div>
+                <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700/60">
+                    <span class="text-slate-400 text-xs font-bold uppercase tracking-wider">Progreso</span>
+                    <div class="text-3xl font-black text-cyan-400 mt-2 flex items-baseline justify-between">
+                        <span id="stat-progreso">68%</span>
+                        <span class="text-xs text-cyan-400 font-semibold bg-cyan-500/10 px-2 py-0.5 rounded">Estable</span>
+                    </div>
+                </div>
+                <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700/60 border-l-4 border-l-amber-500">
+                    <span class="text-amber-400 text-xs font-bold uppercase tracking-wider">Escudo Salud</span>
+                    <div class="text-lg font-bold text-white mt-2 flex items-center justify-between">
+                        <span>1 Alerta</span>
+                        <button type="button" onclick="cambiarVista('equipo')" class="text-xs text-cyan-400 underline hover:text-cyan-300 cursor-pointer">Revisar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700/60 space-y-4">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-bold text-lg text-white">Tareas Prioritarias</h3>
+                            <button type="button" onclick="cambiarVista('tareas')" class="text-sm text-cyan-400 hover:underline cursor-pointer">Ver todas</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead>
+                                    <tr class="border-b border-slate-700 text-slate-400 text-xs uppercase">
+                                        <th class="py-3 px-2">Tarea & Descripción</th>
+                                        <th class="py-3 px-2">Responsable</th>
+                                        <th class="py-3 px-2">Prioridad</th>
+                                        <th class="py-3 px-2">Estado</th>
+                                        <th class="py-3 px-2 text-right">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-dashboard-tareas" class="divide-y divide-slate-700/50"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- WIDGET BIO-RITMO CONECTADO -->
+                    <div class="bg-gradient-to-r from-cyan-950/40 to-slate-800 p-6 rounded-2xl border border-cyan-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div class="space-y-1">
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-brain text-cyan-400"></i>
+                                <h4 class="font-bold text-white">Gestor de Bio-Ritmo</h4>
+                            </div>
+                            <p id="biorritmo-texto" class="text-sm text-slate-300">Presiona el botón para calcular tu estado energético actual.</p>
+                        </div>
+                        <button type="button" id="btn-ejecutar-biorritmo" onclick="ejecutarBioRitmo()" class="bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-bold text-xs px-4 py-2.5 rounded-xl whitespace-nowrap transition cursor-pointer shadow-md flex items-center gap-2">
+                            <i class="fa-solid fa-bolt"></i> Activar Enfoque
+                        </button>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700/60 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-bold text-lg text-white">Módulo de Salud</h3>
+                            <i class="fa-solid fa-shield-heart text-cyan-400 text-xl"></i>
+                        </div>
+                        
+                        <div class="bg-rose-500/10 border border-rose-500/20 p-4 rounded-xl space-y-2">
+                            <div class="flex items-center space-x-2 text-rose-400 font-bold text-sm">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                                <span>Sobrecarga Detectada</span>
+                            </div>
+                            <p class="text-xs text-slate-300"><strong class="text-white">Carlos Pérez</strong> tiene asignaciones complejas acumuladas. Riesgo inminente de fatiga.</p>
+                            <button type="button" onclick="cambiarVista('equipo')" class="text-xs text-rose-400 font-bold hover:underline block pt-1 cursor-pointer">Ver opciones de reasignación &rarr;</button>
+                        </div>
+
+                        <div class="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl space-y-1">
+                            <div class="flex items-center space-x-2 text-emerald-400 font-bold text-sm">
+                                <i class="fa-solid fa-circle-check"></i>
+                                <span>Operación Estable</span>
+                            </div>
+                            <p class="text-xs text-slate-300">El resto del equipo se mantiene en niveles saludables.</p>
+                        </div>
+
+                        <!-- BOTÓN CONECTADO A MODAL GERENCIA -->
+                        <button type="button" onclick="abrirModalGerencia()" class="w-full bg-slate-700 hover:bg-cyan-600 hover:text-slate-900 text-white font-bold py-2.5 rounded-xl text-xs transition cursor-pointer flex items-center justify-center space-x-2 shadow-md">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>Enviar Novedades a Gerencia</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VISTA 4: TAREAS COMPLETAS -->
+        <section id="vista-tareas" class="vista hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-800/50 p-4 rounded-2xl border border-slate-800">
+                <div>
+                    <h2 class="text-2xl font-black text-white">Directorio de Tareas</h2>
+                    <p class="text-slate-400 text-sm">Busca, edita y organiza las actividades de toda la empresa.</p>
+                </div>
+                <button type="button" onclick="abrirModalTarea()" class="bg-primary hover:bg-indigo-600 text-white text-sm font-semibold px-4 py-2 rounded-xl transition flex items-center shadow-md cursor-pointer">
+                    <i class="fa-solid fa-plus mr-2"></i> Nueva Tarea
+                </button>
+            </div>
+            
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700/60 space-y-4">
+                <div class="flex flex-col sm:flex-row gap-3 justify-between items-center">
+                    <div class="relative w-full sm:w-80">
+                        <i class="fa-solid fa-search absolute left-3 top-3 text-slate-400 text-sm"></i>
+                        <input type="text" id="input-buscar-tarea" oninput="filtrarTareas()" placeholder="Buscar por título o responsable..." class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-4 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 transition">
+                    </div>
+                    <select id="filtro-prioridad" onchange="filtrarTareas()" class="w-full sm:w-auto bg-slate-900 border border-slate-700 text-white text-sm rounded-xl px-3 py-2 outline-none focus:border-cyan-400 cursor-pointer">
+                        <option value="todas">Cualquier Prioridad</option>
+                        <option value="Alta">Prioridad Alta</option>
+                        <option value="Media">Prioridad Media</option>
+                        <option value="Baja">Prioridad Baja</option>
+                    </select>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="border-b border-slate-700 text-slate-400 text-xs uppercase">
+                                <th class="py-3 px-3">Tarea & Descripción</th>
+                                <th class="py-3 px-3">Responsable</th>
+                                <th class="py-3 px-3">Prioridad</th>
+                                <th class="py-3 px-3">Estado</th>
+                                <th class="py-3 px-3 text-right">Opciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-gestion-tareas" class="divide-y divide-slate-700/50"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- VISTA 5: CARGA LABORAL & SALUD -->
+        <section id="vista-equipo" class="vista hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-800/50 p-4 rounded-2xl border border-slate-800">
+                <div>
+                    <h2 class="text-2xl font-black text-white">Escudo de Salud Laboral</h2>
+                    <p class="text-slate-400 text-sm">Revisa el estrés de los colaboradores y equilibra el trabajo en un clic.</p>
+                </div>
+                <button type="button" onclick="abrirModalUsuario()" class="bg-secondary hover:bg-cyan-600 text-slate-950 text-sm font-semibold px-4 py-2 rounded-xl transition flex items-center shadow-md cursor-pointer">
+                    <i class="fa-solid fa-user-plus mr-2"></i> Nuevo Colaborador
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="contenedor-usuarios-salud"></div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-950 border-t border-slate-800 py-6 text-center text-xs text-slate-500 mt-auto">
+        <p>&copy; 2026 TaskFlow Pro. Todos los derechos reservados. Plataforma Integral de Bienestar Operativo.</p>
+    </footer>
+
+    <!-- MODAL: CREAR / EDITAR TAREA -->
+    <div id="modal-tarea" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-slate-800 border border-slate-700 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden transform transition-all">
+            <div class="p-4 bg-slate-900 border-b border-slate-700 flex justify-between items-center">
+                <h3 id="modal-tarea-titulo" class="font-bold text-white text-base">Crear Nueva Tarea</h3>
+                <button type="button" onclick="cerrarModal('modal-tarea')" class="text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <input type="hidden" id="task-edit-id">
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-slate-300">Título de la Tarea</label>
+                    <input type="text" id="task-titulo" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:border-cyan-400" placeholder="Ej. Revisión de presupuesto">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-slate-300">Descripción detallada</label>
+                    <textarea id="task-desc" rows="2" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:border-cyan-400" placeholder="Instrucciones clave..."></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold text-slate-300">Asignar a</label>
+                        <select id="task-responsable" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-cyan-400"></select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold text-slate-300">Prioridad</label>
+                        <select id="task-prioridad" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-cyan-400">
+                            <option value="Alta">Alta (Urgente)</option>
+                            <option value="Media">Media</option>
+                            <option value="Baja">Baja</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-slate-300">Estado de Avance</label>
+                    <select id="task-estado" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-cyan-400">
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="En Curso">En Curso</option>
+                        <option value="Completada">Completada</option>
+                    </select>
+                </div>
+                <div class="pt-4 flex justify-end space-x-3">
+                    <button type="button" onclick="cerrarModal('modal-tarea')" class="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-sm font-semibold transition cursor-pointer">Cancelar</button>
+                    <button type="button" onclick="guardarTarea()" class="px-5 py-2.5 rounded-xl bg-primary hover:bg-indigo-600 text-sm font-bold text-white shadow-lg shadow-primary/30 transition cursor-pointer">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CREAR USUARIO -->
+    <div id="modal-usuario" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
+            <div class="p-4 bg-slate-900 border-b border-slate-700 flex justify-between items-center">
+                <h3 class="font-bold text-white text-base">Añadir Colaborador</h3>
+                <button type="button" onclick="cerrarModal('modal-usuario')" class="text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-slate-300">Nombre Completo</label>
+                    <input type="text" id="user-nombre" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:border-cyan-400">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-slate-300">Cargo / Especialidad</label>
+                    <input type="text" id="user-rol" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:border-cyan-400">
+                </div>
+                <div class="pt-3 flex justify-end space-x-3">
+                    <button type="button" onclick="cerrarModal('modal-usuario')" class="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-sm font-semibold transition cursor-pointer">Cerrar</button>
+                    <button type="button" onclick="guardarUsuario()" class="px-5 py-2.5 rounded-xl bg-secondary hover:bg-cyan-600 text-sm font-bold text-slate-950 shadow-lg shadow-cyan-500/20 transition cursor-pointer">Registrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: REPORTE GERENCIAL CONECTADO -->
+    <div id="modal-gerencia" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
+            <div class="p-4 bg-slate-900 border-b border-slate-700 flex justify-between items-center">
+                <h3 class="font-bold text-white text-base">Redactar Correo a Gerencia</h3>
+                <button type="button" onclick="cerrarModal('modal-gerencia')" class="text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-slate-300">Destinatario (Email del Directivo)</label>
+                    <input type="email" id="gerencia-email" value="direccion@empresa.com" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-cyan-400">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-slate-300">Cuerpo del Mensaje</label>
+                    <textarea id="gerencia-mensaje" rows="4" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-cyan-400">Estimados, 
+Se adjunta el reporte semanal. Destaco la necesidad de revisar la carga asignada a Carlos Pérez, quien ha superado el límite sugerido por el escudo de salud.
+Quedo atento.</textarea>
+                </div>
+                <div class="pt-3 flex justify-end space-x-3">
+                    <button type="button" onclick="cerrarModal('modal-gerencia')" class="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-sm font-semibold transition cursor-pointer">Cancelar</button>
+                    <button type="button" onclick="enviarReporteGerencia()" class="px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-sm font-bold text-slate-950 shadow-lg shadow-cyan-500/20 transition cursor-pointer flex items-center gap-2">
+                        <i class="fa-solid fa-paper-plane"></i> Enviar Ahora
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: POMODORO TIMER -->
+    <div id="modal-pomodoro" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-slate-800 border border-slate-700 w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden text-center">
+            <div class="p-4 bg-slate-900 border-b border-slate-700 flex justify-between items-center">
+                <span class="font-bold text-white text-base">⏱️ Bloque de Enfoque Profundo</span>
+                <button type="button" onclick="cerrarModal('modal-pomodoro')" class="text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="p-8 space-y-6">
+                <div class="text-5xl font-black text-cyan-400 tracking-wider" id="pomodoro-display">25:00</div>
+                <p class="text-xs text-slate-400">Trabaja sin interrupciones durante este periodo.</p>
+                <div class="flex justify-center gap-3">
+                    <button type="button" onclick="iniciarPomodoro()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs transition cursor-pointer">Iniciar</button>
+                    <button type="button" onclick="pausarPomodoro()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs transition cursor-pointer">Pausar</button>
+                    <button type="button" onclick="reiniciarPomodoro()" class="bg-slate-700 hover:bg-slate-600 text-white font-bold px-3 py-2.5 rounded-xl text-xs transition cursor-pointer">Reiniciar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: BUZÓN DE CORREOS -->
+    <div id="modal-correos" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-slate-800 border border-slate-700 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden">
+            <div class="p-4 bg-slate-900 border-b border-slate-700 flex justify-between items-center">
+                <h3 class="font-bold text-white text-base">Bandeja de Entrada</h3>
+                <button type="button" onclick="cerrarModal('modal-correos')" class="text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div id="lista-buzon-correos" class="p-6 space-y-3 max-h-96 overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <!-- MODAL: EXPORTAR DATOS -->
+    <div id="modal-exportar" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-slate-800 border border-slate-700 w-full max-w-xs rounded-2xl shadow-2xl overflow-hidden">
+            <div class="p-4 bg-slate-900 border-b border-slate-700 flex justify-between items-center">
+                <h3 class="font-bold text-white text-base">Exportar Resumen</h3>
+                <button type="button" onclick="cerrarModal('modal-exportar')" class="text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="p-6 grid grid-cols-1 gap-3">
+                <button type="button" onclick="ejecutarExportacion('CSV')" class="p-4 bg-slate-900 hover:bg-slate-700 border border-slate-700 rounded-xl text-center transition cursor-pointer flex items-center justify-center gap-3">
+                    <i class="fa-solid fa-file-csv text-xl text-emerald-400"></i>
+                    <span class="text-sm font-bold text-white">Archivo CSV</span>
+                </button>
+                <button type="button" onclick="ejecutarExportacion('PDF')" class="p-4 bg-slate-900 hover:bg-slate-700 border border-slate-700 rounded-xl text-center transition cursor-pointer flex items-center justify-center gap-3">
+                    <i class="fa-solid fa-file-pdf text-xl text-rose-400"></i>
+                    <span class="text-sm font-bold text-white">Reporte PDF</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CHECKOUT DE PAGOS -->
+    <div id="modal-checkout" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-slate-800 border border-slate-700 w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden">
+            <div class="p-4 bg-slate-900 border-b border-slate-700 flex justify-between items-center">
+                <h3 class="font-bold text-white text-base">Confirmar Pago</h3>
+                <button type="button" onclick="cerrarModal('modal-checkout')" class="text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 flex justify-between items-center">
+                    <div>
+                        <span id="checkout-plan-nombre" class="text-white font-bold block text-sm">Plan Seleccionado</span>
+                    </div>
+                    <span id="checkout-plan-precio" class="text-cyan-400 font-black text-lg">$0</span>
+                </div>
+                <button type="button" onclick="procesarPagoRealista()" class="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-sm transition cursor-pointer shadow-lg">
+                    Finalizar Compra (Simulación)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: INICIAR SESIÓN / REGISTRO -->
+    <div id="modal-login" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-slate-800 border border-slate-700 w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden">
+            <div class="p-4 bg-slate-900 border-b border-slate-700 flex justify-between items-center">
+                <span class="font-bold text-white text-base">Acceso a TaskFlow Pro</span>
+                <button type="button" onclick="cerrarModal('modal-login')" class="text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-slate-300">Correo Electrónico</label>
+                    <input type="email" id="auth-email" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-cyan-400" placeholder="usuario@empresa.com">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-slate-300">Contraseña</label>
+                    <input type="password" id="auth-pass" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-cyan-400" placeholder="••••••••">
+                </div>
+                <div class="pt-2 grid grid-cols-2 gap-3">
+                    <button type="button" onclick="registrarUsuarioAuth()" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-2.5 rounded-xl text-xs transition cursor-pointer">Crear Cuenta</button>
+                    <button type="button" onclick="iniciarSesionAuth()" class="w-full bg-primary hover:bg-indigo-600 text-white font-bold py-2.5 rounded-xl text-xs transition cursor-pointer shadow-lg">Ingresar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: PERFIL -->
+    <div id="modal-auth" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-slate-800 border border-slate-700 w-full max-w-xs rounded-2xl shadow-2xl overflow-hidden">
+            <div class="p-4 bg-slate-900 border-b border-slate-700 flex justify-between items-center">
+                <span class="font-bold text-white text-base">Mi Perfil</span>
+                <button type="button" onclick="cerrarModal('modal-auth')" class="text-slate-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="p-6 text-center space-y-4">
+                <div class="w-16 h-16 bg-primary/20 text-primary rounded-full flex items-center justify-center mx-auto text-2xl font-bold"><i class="fa-solid fa-user"></i></div>
+                <div>
+                    <h4 class="text-white font-bold text-base truncate" id="auth-nombre-display">Invitado</h4>
+                    <p class="text-xs text-slate-400" id="auth-rol-display">Modo Lectura</p>
+                </div>
+                <div class="space-y-2">
+                    <button type="button" onclick="cerrarSesionAuth()" class="w-full bg-rose-600/20 hover:bg-rose-600/40 text-rose-400 border border-rose-500/50 font-bold py-2 rounded-xl text-xs transition cursor-pointer">Cerrar Sesión</button>
+                    <button type="button" onclick="cerrarModal('modal-auth')" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 rounded-xl text-xs transition cursor-pointer">Volver</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FIREBASE MODULE -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "mock-key", authDomain: "mock.firebaseapp.com", projectId: "mock-id"
+        };
+
+        let auth;
+        try {
+            const app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            
+            window.currentUserAuth = null;
+
+            onAuthStateChanged(auth, (user) => {
+                window.currentUserAuth = user;
+                const label = document.getElementById('label-usuario-activo');
+                const display = document.getElementById('auth-nombre-display');
+                const rol = document.getElementById('auth-rol-display');
+
+                if (user && !user.isAnonymous) {
+                    label.innerText = user.email.split('@')[0];
+                    display.innerText = user.email;
+                    rol.innerText = "Usuario Registrado";
+                    cerrarModal('modal-login');
+                } else if (user && user.isAnonymous) {
+                    label.innerText = "Invitado Anónimo";
+                    display.innerText = "Anónimo";
+                    rol.innerText = "Modo Temporal";
+                } else {
+                    label.innerText = "Ingresar";
+                    display.innerText = "No Autenticado";
+                    rol.innerText = "-";
+                }
+            });
+
+            if (typeof __initial_auth_token !== 'undefined') {
+                signInWithCustomToken(auth, __initial_auth_token).catch(console.error);
+            } else {
+                signInAnonymously(auth).catch(console.error);
+            }
+
+            window.registrarUsuarioAuth = () => {
+                const email = document.getElementById('auth-email').value;
+                const pass = document.getElementById('auth-pass').value;
+                if(!email || !pass) return mostrarToast("Ingresa correo y contraseña", "error");
+                
+                createUserWithEmailAndPassword(auth, email, pass)
+                    .then(() => mostrarToast("¡Cuenta creada exitosamente!"))
+                    .catch(err => mostrarToast("Error: " + err.message, "error"));
+            };
+
+            window.iniciarSesionAuth = () => {
+                const email = document.getElementById('auth-email').value;
+                const pass = document.getElementById('auth-pass').value;
+                if(!email || !pass) return mostrarToast("Ingresa correo y contraseña", "error");
+                
+                signInWithEmailAndPassword(auth, email, pass)
+                    .then(() => mostrarToast("¡Bienvenido de nuevo!"))
+                    .catch(err => mostrarToast("Error: Credenciales inválidas", "error"));
+            };
+
+            window.cerrarSesionAuth = () => {
+                signOut(auth).then(() => {
+                    mostrarToast("Sesión cerrada.");
+                    cerrarModal('modal-auth');
+                    signInAnonymously(auth).catch(console.error);
+                });
+            };
+
+        } catch(e) {
+            console.error("Firebase init skipped or failed", e);
+        }
+    </script>
+
+    <script>
+        // ESTADO GLOBAL
+        let estadoApp = {
+            tareas: [
+                { id: 1, titulo: "Optimizar consultas SQL", desc: "Reducir tiempos en base de datos", responsable: "Carlos Pérez", prioridad: "Alta", estado: "En Curso" },
+                { id: 2, titulo: "Diseño UX pasarela", desc: "Adaptabilidad responsive", responsable: "Ana Gómez", prioridad: "Media", estado: "Pendiente" },
+                { id: 3, titulo: "Auditoría de seguridad", desc: "Revisión de paquetes npm", responsable: "Carlos Pérez", prioridad: "Alta", estado: "Pendiente" },
+                { id: 4, titulo: "Integración API Externa", desc: "Conectar con pasarela de envío", responsable: "Sofia Torres", prioridad: "Media", estado: "Completada" }
+            ],
+            equipo: [
+                { id: 1, nombre: "Carlos Pérez", rol: "Backend Lead", carga: "Alta", estadoSalud: "Alerta de Fatiga", tareasAsignadas: 2 },
+                { id: 2, nombre: "Ana Gómez", rol: "Product Designer", carga: "Media", estadoSalud: "Saludable", tareasAsignadas: 1 },
+                { id: 3, nombre: "Sofia Torres", rol: "Fullstack", carga: "Baja", estadoSalud: "Óptimo", tareasAsignadas: 1 }
+            ],
+            notificaciones: [
+                { id: 1, texto: "Carlos Pérez tiene sobrecarga de prioridades Altas.", leida: false, fecha: "Hace 5 min" }
+            ],
+            correos: [
+                { id: 1, de: "direccion@empresa.com", asunto: "Revisión de presupuestos", cuerpo: "Por favor envíen el reporte ASAP.", fecha: "Hoy, 09:30 AM" }
+            ]
+        };
+
+        // VARIABLES POMODORO
+        let pomodoroInterval = null;
+        let pomodoroSegundos = 25 * 60;
+        let pomodoroActivo = false;
+
+        // ESTADO BIO RITMO
+        let modoBioRitmoActivo = false;
+
+        // INICIALIZACIÓN
+        window.onload = function() {
+            renderizarTodo();
+            cambiarVista('landing'); // Iniciamos en la landing por defecto
+        };
+
+        // FUNCIÓN CRÍTICA DE NAVEGACIÓN (Corregida)
+        function cambiarVista(idVista) {
+            // Ocultamos todas las vistas
+            document.querySelectorAll('.vista').forEach(v => v.classList.add('hidden'));
+            
+            const vistaMap = {
+                'landing': 'vista-landing',
+                'planes': 'vista-planes',
+                'dashboard': 'vista-dashboard',
+                'tareas': 'vista-tareas',
+                'equipo': 'vista-equipo'
+            };
+
+            const vistaReal = vistaMap[idVista] || 'vista-landing';
+            // SE CORRIGIÓ EL TYPO DE elementeVista A elementoVista
+            const elementoVista = document.getElementById(vistaReal);
+            if (elementoVista) {
+                elementoVista.classList.remove('hidden');
+            }
+
+            // Cambiar estilos de los botones del Nav
+            ['landing', 'planes', 'dashboard', 'tareas', 'equipo'].forEach(n => {
+                const btn = document.getElementById(`nav-${n}`);
+                if (btn) {
+                    if (n === idVista) {
+                        btn.className = "text-cyan-400 font-bold transition cursor-pointer";
+                    } else {
+                        btn.className = "text-slate-300 hover:text-cyan-400 transition cursor-pointer";
+                    }
+                }
+            });
+        }
+
+        // FUNCIÓN DE NOTIFICACIONES TOAST
+        function mostrarToast(mensaje, tipo = "success") {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            const colorBg = tipo === "success" ? "bg-emerald-600 text-white" : "bg-rose-600 text-white";
+            toast.className = `${colorBg} px-4 py-3 rounded-xl shadow-2xl text-xs font-bold transition-all duration-300 transform translate-y-2 opacity-0 flex items-center space-x-2`;
+            toast.innerHTML = `<i class="fa-solid fa-circle-info"></i><span>${mensaje}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 50);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        
+        // BIO-RITMO CONECTADO
+        function ejecutarBioRitmo() {
+            const panelEnfoque = document.getElementById('panel-enfoque-activo');
+            const detalleActivo = document.getElementById('biorritmo-detalle-activo');
+            const biorritmoTexto = document.getElementById('biorritmo-texto');
+            
+            // Simular cálculo de energía
+            const energia = Math.floor(Math.random() * (100 - 85 + 1)) + 85; 
+            modoBioRitmoActivo = true;
+
+            if (panelEnfoque) {
+                panelEnfoque.classList.remove('hidden');
+                panelEnfoque.classList.add('flex'); 
+                if (detalleActivo) {
+                    detalleActivo.innerText = `Nivel de energía óptimo al ${energia}%. Tareas sincronizadas.`;
+                }
+            }
+            if (biorritmoTexto) {
+                biorritmoTexto.innerHTML = `<span class="text-cyan-400 font-bold">¡Optimización Completa!</span> Energía al ${energia}%.`;
+            }
+
+            mostrarToast(`🧠 ¡Bio-ritmo activado! Tu energía está al ${energia}%. Tareas filtradas.`);
+            renderizarTodo(); // Re-render tasks to apply bio-rhythm filter
+        }
+
+        function cerrarModoEnfoque() {
+            const panelEnfoque = document.getElementById('panel-enfoque-activo');
+            const biorritmoTexto = document.getElementById('biorritmo-texto');
+            modoBioRitmoActivo = false;
+
+            if (panelEnfoque) panelEnfoque.classList.add('hidden');
+            if (biorritmoTexto) biorritmoTexto.innerText = "Presiona el botón para calcular tu estado energético actual.";
+            mostrarToast("Modo enfoque desactivado temporalmente.");
+            renderizarTodo(); // Re-render to show all tasks again
+        }
+
+        // TAREAS
+        function guardarTarea() {
+            const editId = document.getElementById('task-edit-id').value;
+            const titulo = document.getElementById('task-titulo').value.trim();
+            const desc = document.getElementById('task-desc').value.trim();
+            const responsable = document.getElementById('task-responsable').value;
+            const prioridad = document.getElementById('task-prioridad').value;
+            const estado = document.getElementById('task-estado').value;
+
+            if (!titulo) {
+                mostrarToast("Debes ingresar un título para la tarea", "error");
+                return;
+            }
+
+            if (editId) {
+                const t = estadoApp.tareas.find(item => item.id == editId);
+                if (t) {
+                    t.titulo = titulo; t.desc = desc; t.responsable = responsable; t.prioridad = prioridad; t.estado = estado;
+                }
+                mostrarToast("✅ Tarea modificada correctamente");
+            } else {
+                estadoApp.tareas.unshift({
+                    id: Date.now(), titulo, desc, responsable, prioridad, estado
+                });
+                mostrarToast("✅ Tarea creada exitosamente");
+            }
+
+            cerrarModal('modal-tarea');
+            renderizarTodo();
+        }
+
+        function eliminarTarea(id) {
+            estadoApp.tareas = estadoApp.tareas.filter(t => t.id !== id);
+            mostrarToast("🗑️ Tarea eliminada");
+            renderizarTodo();
+        }
+
+        // USUARIOS Y SALUD
+        function guardarUsuario() {
+            const nombre = document.getElementById('user-nombre').value.trim();
+            const rol = document.getElementById('user-rol').value.trim();
+            if (!nombre) return mostrarToast("Nombre obligatorio", "error");
+
+            estadoApp.equipo.push({ id: Date.now(), nombre, rol, carga: "Baja", estadoSalud: "Óptimo", tareasAsignadas: 0 });
+            mostrarToast(`👤 ${nombre} ha sido añadido al equipo`);
+            cerrarModal('modal-usuario');
+            renderizarTodo();
+        }
+
+        function reasignarCarga(id) {
+            const u = estadoApp.equipo.find(item => item.id === id);
+            if (u) {
+                u.carga = u.carga === "Alta" ? "Media" : "Baja";
+                u.estadoSalud = u.carga === "Baja" ? "Óptimo" : "Saludable";
+                mostrarToast(`⚖️ Tareas de ${u.nombre} balanceadas automáticamente.`);
+                renderizarTodo();
+            }
+        }
+
+        // EMAIL GERENCIA Y REPORTE TXT
+        function enviarReporteGerencia() {
+            const destinatario = document.getElementById('gerencia-email').value;
+            const mensaje = document.getElementById('gerencia-mensaje').value;
+            
+            const contenido = `=======================================\nREPORTE GERENCIAL - TASKFLOW PRO\n=======================================\n\nFecha: ${new Date().toLocaleString()}\nDestinatario: ${destinatario}\n\nMENSAJE:\n${mensaje}\n\n=======================================\nGenerado automáticamente por TaskFlow Pro`;
+            
+            const blob = new Blob([contenido], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Reporte_Gerencial_${Date.now()}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            cerrarModal('modal-gerencia');
+            mostrarToast("📨 ¡Reporte TXT generado y descargado exitosamente!");
+        }
+
+        // EXPORTACIÓN Y PAGOS
+        function ejecutarExportacion(tipo) {
+            cerrarModal('modal-exportar');
+            mostrarToast(`📄 Archivo ${tipo} preparado y descargado.`);
+        }
+        function procesarPagoRealista() {
+            cerrarModal('modal-checkout');
+            cambiarVista('dashboard');
+            mostrarToast("💳 Pago simulado procesado. Bienvenido a tu nuevo plan.");
+        }
+
+        
+        function abrirModalTarea(id = null) {
+            document.getElementById('task-edit-id').value = ""; document.getElementById('task-titulo').value = ""; document.getElementById('task-desc').value = "";
+            document.getElementById('modal-tarea-titulo').innerText = "Nueva Tarea";
+            if (id !== null) {
+                const t = estadoApp.tareas.find(item => item.id === id);
+                if (t) {
+                    document.getElementById('task-edit-id').value = t.id; document.getElementById('task-titulo').value = t.titulo;
+                    document.getElementById('task-desc').value = t.desc; document.getElementById('task-responsable').value = t.responsable;
+                    document.getElementById('task-prioridad').value = t.prioridad; document.getElementById('task-estado').value = t.estado;
+                    document.getElementById('modal-tarea-titulo').innerText = "Editar Tarea";
+                }
+            }
+            abrirModal('modal-tarea');
+        }
+
+        function verificarPerfil() {
+            if (window.currentUserAuth && !window.currentUserAuth.isAnonymous) {
+                abrirModalAuth();
+            } else {
+                abrirModal('modal-login');
+            }
+        }
+
+        function abrirModalGerencia() { abrirModal('modal-gerencia'); }
+        function abrirModalUsuario() { abrirModal('modal-usuario'); }
+        function abrirModalPomodoro() { abrirModal('modal-pomodoro'); }
+        function abrirModalExportar() { abrirModal('modal-exportar'); }
+        function abrirModalAuth() { abrirModal('modal-auth'); }
+        function abrirModalCheckout(plan, precio) {
+            document.getElementById('checkout-plan-nombre').innerText = plan;
+            document.getElementById('checkout-plan-precio').innerText = precio;
+            abrirModal('modal-checkout');
+        }
+
+        function abrirBuzonCorreos() {
+            const lista = document.getElementById('lista-buzon-correos');
+            lista.innerHTML = "";
+            estadoApp.correos.forEach(c => {
+                lista.innerHTML += `
+                    <div class="bg-slate-900 p-4 rounded-xl border border-slate-700">
+                        <div class="flex justify-between items-center text-xs text-slate-400 mb-2"><span class="font-bold text-white">${c.de}</span><span>${c.fecha}</span></div>
+                        <h4 class="text-sm font-bold text-cyan-400">${c.asunto}</h4>
+                        <p class="text-xs text-slate-300 mt-1">${c.cuerpo}</p>
+                    </div>`;
+            });
+            abrirModal('modal-correos');
+            document.getElementById('badge-correos').style.display = 'none'; // Marcar leidos
+        }
+
+        function abrirModal(id) { document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex'); }
+        function cerrarModal(id) { document.getElementById(id).classList.add('hidden'); document.getElementById(id).classList.remove('flex'); }
+
+        // RENDERIZADORES
+        function renderizarTodo() {
+            renderizarGestionTareas();
+            renderizarDashboardTareas();
+            renderizarEquipo();
+            renderizarSelect();
+            actualizarEstadisticas();
+        }
+
+        function renderizarGestionTareas() {
+            const tbody = document.getElementById('tabla-gestion-tareas');
+            if(!tbody) return;
+            const filtroP = document.getElementById('filtro-prioridad').value;
+            const search = document.getElementById('input-buscar-tarea') ? document.getElementById('input-buscar-tarea').value.toLowerCase() : "";
+            
+            tbody.innerHTML = "";
+            let tareas = estadoApp.tareas.filter(t => (filtroP === 'todas' || t.prioridad === filtroP) && (t.titulo.toLowerCase().includes(search) || t.responsable.toLowerCase().includes(search)));
+
+            // Aplicar filtro de Bio-Ritmo si está activo (solo tareas urgentes)
+            if (modoBioRitmoActivo) {
+                tareas = tareas.filter(t => t.prioridad === 'Alta');
+            }
+
+            if (tareas.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-4 px-3 text-center text-slate-400 text-xs">No hay tareas que coincidan con el modo actual.</td></tr>`;
+                return;
+            }
+
+            tareas.forEach(t => {
+                const cPrio = t.prioridad === 'Alta' ? 'text-rose-400 bg-rose-500/10 border-rose-500/20' : (t.prioridad === 'Media' ? 'text-amber-400 bg-amber-500/10 border-amber-500/20' : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20');
+                const cEst = t.estado === 'Completada' ? 'text-emerald-400' : (t.estado === 'En Curso' ? 'text-cyan-400' : 'text-slate-400');
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-700/30 transition border-b border-slate-700/50 last:border-0">
+                        <td class="py-3 px-3"><span class="font-bold text-white block text-sm">${t.titulo}</span><span class="text-xs text-slate-400">${t.desc}</span></td>
+                        <td class="py-3 px-3 text-xs text-slate-300">${t.responsable}</td>
+                        <td class="py-3 px-3"><span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${cPrio}">${t.prioridad}</span></td>
+                        <td class="py-3 px-3 text-xs font-semibold ${cEst}">${t.estado}</td>
+                        <td class="py-3 px-3 text-right">
+                            <button onclick="abrirModalTarea(${t.id})" class="text-slate-400 hover:text-cyan-400 p-1 mx-1"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="eliminarTarea(${t.id})" class="text-slate-400 hover:text-rose-400 p-1"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        function filtrarTareas() { renderizarGestionTareas(); }
+
+        function renderizarDashboardTareas() {
+            const tbody = document.getElementById('tabla-dashboard-tareas');
+            if(!tbody) return;
+            tbody.innerHTML = "";
+            
+            let tareas = estadoApp.tareas;
+            
+            // Aplicar filtro de Bio-Ritmo si está activo
+            if (modoBioRitmoActivo) {
+                tareas = tareas.filter(t => t.prioridad === 'Alta');
+            }
+            
+            if (tareas.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-slate-400 text-xs">No hay tareas en el radar.</td></tr>`;
+                return;
+            }
+            
+            tareas.slice(0, 4).forEach(t => {
+                const cPrio = t.prioridad === 'Alta' ? 'text-rose-400 bg-rose-500/10 border-rose-500/20' : (t.prioridad === 'Media' ? 'text-amber-400 bg-amber-500/10 border-amber-500/20' : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20');
+                const cEst = t.estado === 'Completada' ? 'text-emerald-400' : (t.estado === 'En Curso' ? 'text-cyan-400' : 'text-slate-400');
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-700/30 transition border-b border-slate-700/50 last:border-0">
+                        <td class="py-3 px-2"><span class="font-bold text-white block text-xs sm:text-sm truncate w-40 sm:w-auto">${t.titulo}</span></td>
+                        <td class="py-3 px-2 text-xs text-slate-300">${t.responsable}</td>
+                        <td class="py-3 px-2"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${cPrio}">${t.prioridad}</span></td>
+                        <td class="py-3 px-2 text-xs font-semibold ${cEst}">${t.estado}</td>
+                        <td class="py-3 px-2 text-right"><button onclick="abrirModalTarea(${t.id})" class="text-cyan-400 hover:text-cyan-300 text-xs underline">Editar</button></td>
+                    </tr>`;
+            });
+        }
+
+        function renderizarEquipo() {
+            const div = document.getElementById('contenedor-usuarios-salud');
+            if(!div) return;
+            div.innerHTML = "";
+            estadoApp.equipo.forEach(u => {
+                const c = u.carga === 'Alta' ? 'text-rose-400 bg-rose-500/10 border-rose-500/30' : (u.carga === 'Media' ? 'text-amber-400 bg-amber-500/10 border-amber-500/30' : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30');
+                div.innerHTML += `
+                    <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700/60 flex flex-col justify-between">
+                        <div class="space-y-3 mb-4">
+                            <div class="flex justify-between"><div class="w-10 h-10 bg-primary/20 text-primary font-bold rounded-xl flex items-center justify-center">${u.nombre[0]}</div><span class="px-2 py-1 rounded-full text-[10px] font-bold border ${c}">Carga: ${u.carga}</span></div>
+                            <div><h4 class="font-bold text-white text-base">${u.nombre}</h4><p class="text-xs text-slate-400">${u.rol}</p></div>
+                            <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700/50"><div class="flex justify-between text-xs mb-1"><span class="text-slate-400">Salud:</span><span class="font-bold text-cyan-400">${u.estadoSalud}</span></div></div>
+                        </div>
+                        <button onclick="reasignarCarga(${u.id})" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 rounded-xl text-xs transition">Reasignar / Balancear</button>
+                    </div>`;
+            });
+        }
+
+        function renderizarSelect() {
+            const select = document.getElementById('task-responsable');
+            if(!select) return;
+            select.innerHTML = "";
+            estadoApp.equipo.forEach(u => select.innerHTML += `<option value="${u.nombre}">${u.nombre}</option>`);
+        }
+
+        function actualizarEstadisticas() {
+            const p = estadoApp.tareas.filter(t => t.estado !== 'Completada').length;
+            if(document.getElementById('stat-pendientes')) document.getElementById('stat-pendientes').innerText = p;
+        }
+
+        /* POMODORO LOGIC */
+        function iniciarPomodoro() {
+            if(pomodoroActivo) return;
+            pomodoroActivo = true;
+            pomodoroInterval = setInterval(() => {
+                if(pomodoroSegundos > 0) { pomodoroSegundos--; actPomo(); } 
+                else { clearInterval(pomodoroInterval); pomodoroActivo = false; mostrarToast("¡Sesión completada! Toma un descanso."); }
+            }, 1000);
+        }
+        function pausarPomodoro() { clearInterval(pomodoroInterval); pomodoroActivo = false; }
+        function reiniciarPomodoro() { clearInterval(pomodoroInterval); pomodoroActivo = false; pomodoroSegundos = 25*60; actPomo(); }
+        function actPomo() {
+            const m = Math.floor(pomodoroSegundos / 60); const s = pomodoroSegundos % 60;
+            document.getElementById('pomodoro-display').innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+    </script>
+</body>
+</html>
